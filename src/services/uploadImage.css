@@ -1,0 +1,7 @@
+.ant-upload-select {
+  /* border: 1px solid #a2a1a833 !important; */
+  border-style: solid !important;
+}
+.ant-upload-select:hover {
+  border-color: #2a2a2d33 !important;
+}
