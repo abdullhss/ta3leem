@@ -6,7 +6,7 @@ import { ConfirmModal } from '../global/global-modal/ConfirmModal';
 import { logout } from '../store/slices/authSlice';
 import { setSideMenuDrawer } from '../store/slices/systemSlice';
 import { cn } from '../lib/utils';
-import { Settings } from 'lucide-react';
+import { Settings, ChevronDown, ChevronRight } from 'lucide-react';
 import { LogOutIcon } from '../utils/Icons';
 import Divider from './Divider';
 
@@ -20,16 +20,23 @@ const CompassIcon = () => (
 
 // Menu items data
 const menuItems = [
-  { title: 'الأقسام', path: '/administration/home' },
-  { title: 'الموظفين', path: '/administration/employees' },
-  { title: 'المكاتب', path: '/administration/offices' },
-  { title: 'المدارس', path: '/administration/schools' },
-  { title: 'الطلبات', path: '/administration/requests' },
-  { title: 'الفصول الدراسية و المواد', path: '/administration/semesters' },
-  { title: 'حسابات المفوضين', path: '/administration/delegated-accounts' },
-  { title: 'مجموعة الصلاحيات', path: '/administration/permissions' },
-  { title: 'الإحصائيات', path: '/administration/statistics' },
-  { title: 'معلومات الحساب', path: '/administration/account-info' },
+  { title: 'المدارس', path: '/schools' },
+  { 
+    title: 'قائمة الطلبات', 
+    path: '/requests',
+    sublinks: [
+      { title: 'تقديم طلب إنشاء مدرسة', path: '/requests/create-school' },
+      { title: 'تقديم طلب نقل مدرسة', path: '/requests/transfer-school' },
+      { title: 'طلب تكليف مدير مدرسة جديد', path: '/requests/assign-principal' },
+      { title: 'الطلبات الاخرى', path: '/requests/other' },
+      { title: 'طلبات التجديد', path: '/requests/renewal' },
+      { title: 'طلب زيارة', path: '/requests/visit' }
+    ]
+  },
+  { title: 'رفع المسوغات', path: '/uploads' },
+  { title: 'الإشعارات', path: '/notifications' },
+  { title: 'المدراء', path: '/managers' },
+  { title: 'معلومات حساب المفوض', path: '/account-info' }
 ];
 
 export default function Sidebar() {
@@ -39,6 +46,7 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [activePath, setActivePath] = useState(pathname);
+  const [expandedItems, setExpandedItems] = useState({});
   const userData = useSelector((state) => state.auth.userData);
   const matchUpMD = window.innerWidth >= 768;
 
@@ -47,12 +55,48 @@ export default function Sidebar() {
     if (path) navigate(path);
   };
 
+  const toggleAccordion = (index) => {
+    setExpandedItems(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
+
+  const handleMenuItemClick = (item, index) => {
+    if (item.sublinks) {
+      toggleAccordion(index);
+    } else {
+      handleClick(item.path);
+    }
+  };
+
+  const handleSublinkClick = (sublinkPath) => {
+    handleClick(sublinkPath);
+  };
+
   const handleLogout = () => {
     setIsOpen(true);
   };
 
   useEffect(() => {
     setActivePath(pathname);
+    
+    // Auto-expand accordion if current path matches a sublink
+    menuItems.forEach((item, index) => {
+      if (item.sublinks) {
+        const hasActiveSublink = item.sublinks.some(sublink => pathname.includes(sublink.path));
+        if (hasActiveSublink) {
+          setExpandedItems(prev => {
+            // Only update if not already expanded to avoid unnecessary re-renders
+            if (prev[index]) return prev;
+            return {
+              ...prev,
+              [index]: true
+            };
+          });
+        }
+      }
+    });
   }, [pathname]);
 
   return (
@@ -110,18 +154,57 @@ export default function Sidebar() {
           {/* Menu Items List */}
           <div className="flex-1 overflow-y-auto">
             <div className="flex flex-col gap-2">
-              {menuItems.map((item, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleClick(item.path)}
-                  className={cn(
-                    "text-start font-medium cursor-pointer py-2 px-4 rounded-l-xl transition-colors hover:bg-primary hover:text-white font-alexandria",
-                    activePath.includes(item.path) ? "bg-primary text-white" : ""
-                  )}
-                >
-                  {item.title}
-                </button>
-              ))}
+              {menuItems.map((item, index) => {
+                const isExpanded = expandedItems[index];
+                const hasSublinks = item.sublinks && item.sublinks.length > 0;
+                const isActive = hasSublinks 
+                  ? item.sublinks.some(sublink => activePath.includes(sublink.path))
+                  : activePath.includes(item.path);
+                
+                return (
+                  <div key={index} className="flex flex-col">
+                    <button
+                      onClick={() => handleMenuItemClick(item, index)}
+                      className={cn(
+                        "text-start font-medium cursor-pointer py-2 px-4 rounded-l-xl transition-colors hover:bg-[#BE8D4A] hover:text-white font-alexandria flex items-center justify-between",
+                        isActive ? "bg-[#BE8D4A] text-white" : ""
+                      )}
+                    >
+                      <span>{item.title}</span>
+                      {hasSublinks && (
+                        <span className="mr-2">
+                          {isExpanded ? (
+                            <ChevronDown className="w-4 h-4" />
+                          ) : (
+                            <ChevronRight className="w-4 h-4" />
+                          )}
+                        </span>
+                      )}
+                    </button>
+                    
+                    {/* Sublinks */}
+                    {hasSublinks && isExpanded && (
+                      <div className="flex flex-col gap-1 pr-4 mt-1">
+                        {item.sublinks.map((sublink, subIndex) => {
+                          const isSublinkActive = activePath.includes(sublink.path);
+                          return (
+                            <button
+                              key={subIndex}
+                              onClick={() => handleSublinkClick(sublink.path)}
+                              className={cn(
+                                "text-start font-medium cursor-pointer py-2 px-4 rounded-l-xl hover:text-[#BE8D4A] transition-colors font-alexandria",
+                                isSublinkActive ? "text-[#BE8D4A]" : "text-[#BE8D4A80]"
+                              )}
+                            >
+                              {sublink.title}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
