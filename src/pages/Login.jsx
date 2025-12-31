@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import logo from "../assets/logo.webp";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { executeProcedure } from "../services/apiServices";
 import { z } from "zod";
 import { toast } from "react-toastify";
+import { useDispatch } from "react-redux";
+import { login } from "../store/slices/authSlice";
 
 /* Zod Schema */
 const loginSchema = z.object({
@@ -19,6 +21,8 @@ const loginSchema = z.object({
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     Email: "",
@@ -58,8 +62,16 @@ const Login = () => {
             toast.info(response.decrypted._0)
         }
         else{
-            toast.success("تم تسجيل الدخول بنجاح")
+            // Save user data to auth slice
+            console.log(response.decrypted.userData?JSON.parse(response.decrypted.userData)[0]:null);
+            dispatch(login(response.decrypted.userData?JSON.parse(response.decrypted.userData)[0]:null));
+            // dispatch(login(response.decrypted));
+            toast.success("تم تسجيل الدخول بنجاح");
+            // Navigate to dashboard after successful login
+            navigate("/dashboard");
         }
+      } else {
+        toast.error("فشل تسجيل الدخول. يرجى المحاولة مرة أخرى");
       }
 
       console.log(response);
