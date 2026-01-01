@@ -24,7 +24,7 @@ export default function Schools() {
   
   const [tableData, setTableData] = useState([]);
   const [searchText, setSearchText] = useState('');
-  const [statusId, setStatusId] = useState(-``);
+  const [statusId, setStatusId] = useState(-1);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   
@@ -64,10 +64,10 @@ export default function Schools() {
     // Update state values which will trigger the hook to refetch
     setSearchText(search || '');
     
-    // Get status from filters - use first selected status or 0 if none
+    // Get status from filters - use first selected status or -1 if none
     const selectedStatus = filters?.status && filters.status.length > 0 
       ? parseInt(filters.status[0]) 
-      : 0;
+      : -1;
     setStatusId(selectedStatus);
     
     // Update pagination

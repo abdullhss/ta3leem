@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { executeProcedure } from "../../services/apiServices";
 import { useSelector } from "react-redux";
 
-const useSchools = (status_id = 0 ,searchText="" , startNumber = 1 ,count = 10, schoolType = "Exist") => {
+const useSchools = (status_id = -1 ,searchText="" , startNumber = 1 ,count = 10, schoolType = "Exist") => {
   const [schools, setSchools] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -12,12 +12,6 @@ const useSchools = (status_id = 0 ,searchText="" , startNumber = 1 ,count = 10, 
   
   useEffect(() => {
     const getSchools = async () => {
-      console.log(status_id);
-      console.log(searchText);
-      console.log(startNumber);
-      console.log(count);
-      console.log(schoolType);
-      console.log(userData.Id);
       try {
         setLoading(true);
         const schoolTypeValue = schoolType === "New" 
