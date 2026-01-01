@@ -2,6 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
   isDrawerOpen: false,
+  modalContent: null,
 };
 
 const systemSlice = createSlice({
@@ -14,9 +15,12 @@ const systemSlice = createSlice({
     setSideMenuDrawer: (state, action) => {
       state.isDrawerOpen = action.payload;
     },
+    setModalContent: (state, action) => {
+      state.modalContent = action.payload;
+    },
   },
 });
 
-export const { toggleSideMenuDrawer, setSideMenuDrawer } = systemSlice.actions;
+export const { toggleSideMenuDrawer, setSideMenuDrawer, setModalContent } = systemSlice.actions;
 export default systemSlice.reducer;
 

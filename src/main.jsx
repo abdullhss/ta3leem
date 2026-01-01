@@ -6,6 +6,10 @@ import { BrowserRouter } from 'react-router-dom'
 import { Provider } from 'react-redux'
 import { store } from './store'
 import {ToastContainer} from "react-toastify"
+import { checkAuth } from './store/slices/authSlice'
+
+// Check auth on app initialization
+store.dispatch(checkAuth());
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>

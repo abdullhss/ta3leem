@@ -9,6 +9,7 @@ import { cn } from '../lib/utils';
 import { Settings, ChevronDown, ChevronRight } from 'lucide-react';
 import { LogOutIcon } from '../utils/Icons';
 import Divider from './Divider';
+import { motion, AnimatePresence } from "framer-motion";
 
 // Compass Icon (golden-brown color)
 const CompassIcon = () => (
@@ -17,6 +18,26 @@ const CompassIcon = () => (
 </svg>
 
 );
+
+const accordionVariants = {
+  hidden: {
+    height: 0,
+    opacity: 0,
+    transition: {
+      duration: 0.25,
+      ease: "easeInOut"
+    }
+  },
+  visible: {
+    height: "auto",
+    opacity: 1,
+    transition: {
+      duration: 0.3,
+      ease: "easeInOut"
+    }
+  }
+};
+
 
 // Menu items data
 const menuItems = [
@@ -183,25 +204,37 @@ export default function Sidebar() {
                     </button>
                     
                     {/* Sublinks */}
-                    {hasSublinks && isExpanded && (
-                      <div className="flex flex-col gap-1 pr-4 mt-1">
-                        {item.sublinks.map((sublink, subIndex) => {
-                          const isSublinkActive = activePath.includes(sublink.path);
-                          return (
-                            <button
-                              key={subIndex}
-                              onClick={() => handleSublinkClick(sublink.path)}
-                              className={cn(
-                                "text-start font-medium cursor-pointer py-2 px-4 rounded-l-xl hover:text-[#BE8D4A] transition-colors font-alexandria",
-                                isSublinkActive ? "text-[#BE8D4A]" : "text-[#BE8D4A80]"
-                              )}
-                            >
-                              {sublink.title}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
+                    <AnimatePresence initial={false}>
+                      {hasSublinks && isExpanded && (
+                        <motion.div
+                          key="accordion"
+                          variants={accordionVariants}
+                          initial="hidden"
+                          animate="visible"
+                          exit="hidden"
+                          className="flex flex-col gap-1 pr-4 mt-1 overflow-hidden"
+                        >
+                          {item.sublinks.map((sublink, subIndex) => {
+                            const isSublinkActive = activePath.includes(sublink.path);
+                            return (
+                              <motion.button
+                                key={subIndex}
+                                onClick={() => handleSublinkClick(sublink.path)}
+                                whileHover={{ x: -4 }}
+                                transition={{ duration: 0.2 }}
+                                className={cn(
+                                  "text-start font-medium cursor-pointer py-2 px-4 rounded-l-xl font-alexandria",
+                                  isSublinkActive ? "text-[#BE8D4A]" : "text-[#BE8D4A80]"
+                                )}
+                              >
+                                {sublink.title}
+                              </motion.button>
+                            );
+                          })}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
                   </div>
                 );
               })}
