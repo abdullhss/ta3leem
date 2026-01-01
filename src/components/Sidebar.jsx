@@ -41,7 +41,14 @@ const accordionVariants = {
 
 // Menu items data
 const menuItems = [
-  { title: 'المدارس', path: '/schools' },
+  { 
+    title: 'المدارس', 
+    path: '/schools/new',
+    sublinks: [
+      { title: 'المدارس الجديدة', path: '/schools/new' },
+      { title: 'المدارس القائمة', path: '/schools/old' }
+    ]
+  },
   { 
     title: 'قائمة الطلبات', 
     path: '/requests',

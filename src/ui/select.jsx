@@ -9,6 +9,13 @@ const Select = ({ children, value, onValueChange, ...props }) => {
   const [open, setOpen] = React.useState(false);
   const [selectedValue, setSelectedValue] = React.useState(value || "");
 
+  // Sync internal state when value prop changes
+  React.useEffect(() => {
+    if (value !== undefined) {
+      setSelectedValue(value);
+    }
+  }, [value]);
+
   const handleValueChange = (newValue) => {
     setSelectedValue(newValue);
     onValueChange?.(newValue);

@@ -229,7 +229,7 @@ const CreatSchoolForm = ({schoolType , setSchoolType}) => {
         <span className="bg-black rounded-md flex-shrink-0" onClick={()=>{setSchoolType(null)}}>
           <ChevronRight className="text-white cursor-pointer" height={20} width={20}/>
         </span>
-        <h1 className="text-lg md:text-xl">{schoolType == "Exist" ? "مدرسة قائمة" : "مدرسة جديدة"}</h1>
+        <h1 onClick={()=>{setSchoolType(null)}} className="text-lg md:text-xl">{schoolType == "Exist" ? "مدرسة قائمة" : "مدرسة جديدة"}</h1>
       </div>
 
       <motion.div

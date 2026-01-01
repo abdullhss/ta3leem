@@ -26,8 +26,9 @@ function App() {
       {/* All other routes use the Layout with Navbar and Sidebar */}
       <Route element={<Layout />}>
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/school" element={<Schools />} />
-        <Route path="/schools" element={<Schools />} />
+        <Route path="/school" element={<Navigate to="/schools/new" replace />} />
+        <Route path="/schools" element={<Navigate to="/schools/new" replace />} />
+        <Route path="/schools/:type" element={<Schools />} />
         <Route path="/requests" element={<Requests />} />
         <Route path="/requests/create-school" element={<CreateSchoolRequest />} />
         <Route path="/requests/transfer-school" element={<TransferSchoolRequest />} />

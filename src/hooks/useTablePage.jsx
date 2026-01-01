@@ -262,6 +262,9 @@ export const useTable = ({
             // Use 'all' instead of empty string to fix Radix UI Select error
             const filterOptions = [{ label: t('الكل'), value: '-1' }, ...(filter?.options || [])];
             const currentValue = Array.from(filterState[filter?.key] || new Set())[0] || '-1';
+            // Find the label for the current value
+            const selectedOption = filterOptions.find(opt => opt.value === currentValue);
+            const displayLabel = selectedOption ? selectedOption.label : filter?.label || '';
             return (
               <div key={index} className="w-full sm:w-[180px] min-w-[180px]">
                 <Select
@@ -294,7 +297,7 @@ export const useTable = ({
                       fetchApi(searchValue, 1, rowsPerPage, CleanedFilters, formInfo);
                     }}
                   >
-                    <SelectValue placeholder={filter?.label} />
+                    {displayLabel || <SelectValue placeholder={filter?.label} />}
                   </SelectTrigger>
                   <SelectContent>
                     {filterOptions.map((option) => (
@@ -324,7 +327,7 @@ export const useTable = ({
             className='ltr:pl-12 rtl:pr-12 bg-secondary py-3 rounded-lg'
             placeholder={"ابحث هنا..."}
           />
-          <span className='absolute ltr:left-3 rtl:right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none'>
+          <span className='absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none'>
             <SearchIcon />
           </span>
           {searchValue && (
