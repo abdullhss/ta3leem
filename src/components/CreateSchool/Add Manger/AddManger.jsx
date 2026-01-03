@@ -1,5 +1,4 @@
-// AddManager.jsx
-import { ChevronRight, Paperclip, X, User, Mail, Lock, Building, Hash } from 'lucide-react'
+import { ChevronRight, Paperclip, X, Upload } from 'lucide-react'
 import React, { useRef, useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { motion } from "framer-motion"
@@ -19,17 +18,21 @@ const AddManager = () => {
   const navigate = useNavigate()
   
   // File input refs
+  const profileImageRef = useRef(null)
   const eduQualificationRef = useRef(null)
   const nationalIdRef = useRef(null)
   const criminalRecordRef = useRef(null)
   const healthCertificateRef = useRef(null)
 
   const [uploadedFiles, setUploadedFiles] = useState({
+    profileImage: null,
     eduQualification: null,
     nationalId: null,
     criminalRecord: null,
     healthCertificate: null,
   })
+
+  const [profileImagePreview, setProfileImagePreview] = useState(null)
 
   const userData = useSelector((state) => state.auth.userData)
   
@@ -54,11 +57,6 @@ const AddManager = () => {
 
   // Fetch schools on component mount (example)
   useEffect(() => {
-    // Replace with actual API call to fetch schools
-    // fetchSchools()
-    //   .then(data => setSchools(data))
-    //   .catch(error => console.error('Error fetching schools:', error))
-    
     // Dummy data for demo
     const dummySchools = [
       { Id: 1, SchoolName: 'مدرسة النهضة', Location: 'الرياض' },
@@ -91,6 +89,7 @@ const AddManager = () => {
 
         // Set form value based on file type
         const fieldMap = {
+          profileImage: "profileImageFileId",
           eduQualification: "eduQualificationFileId",
           nationalId: "nationalIdFileId",
           criminalRecord: "criminalRecordFileId",
@@ -99,6 +98,15 @@ const AddManager = () => {
 
         if (fieldMap[type]) {
           setValue(fieldMap[type], fileId, { shouldValidate: true })
+        }
+
+        // Handle profile image preview
+        if (type === 'profileImage') {
+          const reader = new FileReader()
+          reader.onloadend = () => {
+            setProfileImagePreview(reader.result)
+          }
+          reader.readAsDataURL(file)
         }
       }
     } catch (error) {
@@ -114,6 +122,7 @@ const AddManager = () => {
     }))
 
     const fieldMap = {
+      profileImage: "profileImageFileId",
       eduQualification: "eduQualificationFileId",
       nationalId: "nationalIdFileId",
       criminalRecord: "criminalRecordFileId",
@@ -122,6 +131,10 @@ const AddManager = () => {
 
     if (fieldMap[type]) {
       setValue(fieldMap[type], null, { shouldValidate: true })
+    }
+
+    if (type === 'profileImage') {
+      setProfileImagePreview(null)
     }
   }
 
@@ -132,18 +145,18 @@ const AddManager = () => {
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="mt-2 border border-green-500 rounded-lg py-1.5 px-6 flex items-center justify-between bg-green-50"
+        className="mt-2 md:mt-0 border border-green-500 rounded-lg py-1.5 px-3 md:px-6 flex items-center justify-between bg-green-50 w-full md:w-auto"
       >
         <div className="flex items-center gap-2">
-          <Paperclip size={16} className="text-green-600" />
-          <span className="text-sm text-green-700 font-medium truncate max-w-[200px]">
+          <Paperclip size={16} className="text-green-600 flex-shrink-0" />
+          <span className="text-sm text-green-700 font-medium truncate max-w-[120px] md:max-w-[200px]">
             {file.name}
           </span>
         </div>
         <button
           type="button"
           onClick={() => removeFile(file.type)}
-          className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50"
+          className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 flex-shrink-0"
         >
           <X size={18} />
         </button>
@@ -186,10 +199,10 @@ const AddManager = () => {
     // API call to save manager
     try {
       const response = await DoTransaction(
-        "YOUR_PROCEDURE_ID_HERE", // Replace with actual procedure ID
-        `0#${data.fullName}#${data.email}#${data.motherName}#${data.nationalId}#${data.username}#${data.schoolId}#${data.password}#${data.eduQualificationFileId}#${data.nationalIdFileId}#${data.criminalRecordFileId}#${data.healthCertificateFileId}`,
+        "YOUR_PROCEDURE_ID_HERE",
+        `0#${data.fullName}#${data.email}#${data.motherName}#${data.nationalId}#${data.username}#${data.schoolId}#${data.password}#${data.eduQualificationFileId}#${data.nationalIdFileId}#${data.criminalRecordFileId}#${data.healthCertificateFileId}#${data.profileImageFileId || ''}`,
         0,
-        "Id#FullName#Email#MotherName#NationalId#Username#School_Id#Password#EduQualificationAttach#NationalIdAttach#CriminalRecordAttach#HealthCertificateAttach"
+        "Id#FullName#Email#MotherName#NationalId#Username#School_Id#Password#EduQualificationAttach#NationalIdAttach#CriminalRecordAttach#HealthCertificateAttach#ProfileImageAttach"
       )
       
       console.log(response)
@@ -197,7 +210,7 @@ const AddManager = () => {
         toast.error(response.errorMessage || "حدث خطأ أثناء إضافة المدير")
       } else {
         toast.success("تم إضافة المدير بنجاح")
-        navigate(-1) // Go back to previous page
+        navigate(-1)
       }
     } catch (error) {
       console.error("Error saving manager:", error)
@@ -226,6 +239,53 @@ const AddManager = () => {
           onSubmit={handleSubmit(onSubmit)}
           className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6"
         >
+          {/* Profile Image Upload Section */}
+          <div className='w-full col-span-1 md:col-span-2 border-b-2 border-b-[#C0C0C0] pb-6 mb-4'>
+            <h3 className="font-bold text-lg mb-4">صورة المدير</h3>
+            
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              {/* Image Preview/Upload Area */}
+              <div 
+                className="relative border-2 border-dashed border-gray-300 rounded-xl w-full max-w-[150px] h-[150px] overflow-hidden cursor-pointer hover:border-[#BE8D4A] transition-colors"
+                onClick={() => profileImageRef.current.click()}
+              >
+                {profileImagePreview ? (
+                  <>
+                    <img 
+                      src={profileImagePreview} 
+                      alt="Profile preview" 
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Overlay for better UX */}
+                    <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-all flex items-center justify-center">
+                      <div className="text-white opacity-0 hover:opacity-100 transition-opacity text-center p-4">
+                        <Upload size={24} className="mx-auto mb-2" />
+                        <span className="text-sm">تغيير الصورة</span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full p-4 text-gray-500">
+                    <Upload size={48} className="mb-4" />
+                    <p className="text-center mb-2">انقر لرفع صورة المدير</p>
+                  </div>
+                )}
+                
+                <input
+                  type="file"
+                  hidden
+                  ref={profileImageRef}
+                  accept=".jpg,.jpeg,.png"
+                  onChange={(e) => handleFileUpload(e.target.files[0], "profileImage")}
+                />
+              </div>
+            </div>
+            
+            <input
+              type="hidden"
+              {...register("profileImageFileId")}
+            />
+          </div>
           {/* اسم المدير رباعي */}
           <div className="flex flex-col">
             <label className="mb-1 font-semibold flex items-center gap-2">
@@ -400,29 +460,29 @@ const AddManager = () => {
           </div>
 
           {/* المرفقات */}
-          <div className="flex flex-col gap-3 col-span-1 md:col-span-2">
+          <div className="flex flex-col gap-3 col-span-1 md:col-span-2 mt-4">
             <h3 className="font-bold text-lg">المرفقات المطلوبة</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* مرفق المؤهل العلمي التربوي */}
-              <div className="flex flex-col">
-                <div className="flex gap-2">
+              <div className="flex flex-col w-full">
+                <div className="flex flex-col md:flex-row md:items-center gap-2 w-full">
                   <button
                     type="button"
                     onClick={() => eduQualificationRef.current.click()}
-                    className="flex items-center w-1/2 justify-center gap-2 bg-[#BE8D4A] text-white px-4 py-2 rounded mt-1"
+                    className="flex items-center justify-center gap-2 bg-[#BE8D4A] text-white px-4 py-2.5 rounded w-full md:w-1/2"
                   >
                     <Paperclip />
                     المؤهل العلمي التربوي
                   </button>
-                  {errors.eduQualificationFileId && (
-                    <span className="text-red-500 text-sm mt-1">
-                      هذا المرفق مطلوب
-                    </span>
-                  )}
-
+                  
                   <FileDisplay file={uploadedFiles.eduQualification} />
                 </div>
+                {errors.eduQualificationFileId && (
+                  <span className="text-red-500 text-sm mt-1">
+                    هذا المرفق مطلوب
+                  </span>
+                )}
                 <input
                   type="file"
                   hidden
@@ -434,24 +494,24 @@ const AddManager = () => {
               </div>
 
               {/* مرفق الرقم الوطني */}
-              <div className="flex flex-col">
-                <div className="flex gap-2">
+              <div className="flex flex-col w-full">
+                <div className="flex flex-col md:flex-row md:items-center gap-2 w-full">
                   <button
                     type="button"
                     onClick={() => nationalIdRef.current.click()}
-                    className="flex items-center  w-1/2 justify-center gap-2 bg-[#BE8D4A] text-white px-4 py-2 rounded mt-1"
+                    className="flex items-center justify-center gap-2 bg-[#BE8D4A] text-white px-4 py-2.5 rounded w-full md:w-1/2"
                   >
                     <Paperclip />
                     الرقم الوطني
                   </button>
-                  {errors.nationalIdFileId && (
-                    <span className="text-red-500 text-sm mt-1">
-                      هذا المرفق مطلوب
-                    </span>
-                  )}
-
+                  
                   <FileDisplay file={uploadedFiles.nationalId} />
                 </div>
+                {errors.nationalIdFileId && (
+                  <span className="text-red-500 text-sm mt-1">
+                    هذا المرفق مطلوب
+                  </span>
+                )}
                 <input
                   type="file"
                   hidden
@@ -463,24 +523,24 @@ const AddManager = () => {
               </div>
 
               {/* الخلو من السوابق الجنائية */}
-              <div className="flex flex-col">
-                <div className="flex gap-2">
+              <div className="flex flex-col w-full">
+                <div className="flex flex-col md:flex-row md:items-center gap-2 w-full">
                   <button
                     type="button"
                     onClick={() => criminalRecordRef.current.click()}
-                    className="flex w-1/2 items-center justify-center gap-2 bg-[#BE8D4A] text-white px-4 py-2 rounded mt-1"
+                    className="flex items-center justify-center gap-2 bg-[#BE8D4A] text-white px-4 py-2.5 rounded w-full md:w-1/2"
                   >
                     <Paperclip />
                     الخلو من السوابق الجنائية
                   </button>
-                  {errors.criminalRecordFileId && (
-                    <span className="text-red-500 text-sm mt-1">
-                      هذا المرفق مطلوب
-                    </span>
-                  )}
-
+                  
                   <FileDisplay file={uploadedFiles.criminalRecord} />
                 </div>
+                {errors.criminalRecordFileId && (
+                  <span className="text-red-500 text-sm mt-1">
+                    هذا المرفق مطلوب
+                  </span>
+                )}
                 <input
                   type="file"
                   hidden
@@ -492,24 +552,24 @@ const AddManager = () => {
               </div>
 
               {/* شهادة اللياقة الصحية */}
-              <div className="flex flex-col">
-                <div className="flex gap-2">
+              <div className="flex flex-col w-full">
+                <div className="flex flex-col md:flex-row md:items-center gap-2 w-full">
                   <button
                     type="button"
                     onClick={() => healthCertificateRef.current.click()}
-                    className="flex w-1/2 items-center justify-center gap-2 bg-[#BE8D4A] text-white px-4 py-2 rounded mt-1"
+                    className="flex items-center justify-center gap-2 bg-[#BE8D4A] text-white px-4 py-2.5 rounded w-full md:w-1/2"
                   >
                     <Paperclip />
                     شهادة اللياقة الصحية
                   </button>
-                  {errors.healthCertificateFileId && (
-                    <span className="text-red-500 text-sm mt-1">
-                      هذا المرفق مطلوب
-                    </span>
-                  )}
-
+                  
                   <FileDisplay file={uploadedFiles.healthCertificate} />
                 </div>
+                {errors.healthCertificateFileId && (
+                  <span className="text-red-500 text-sm mt-1">
+                    هذا المرفق مطلوب
+                  </span>
+                )}
                 <input
                   type="file"
                   hidden
@@ -523,18 +583,18 @@ const AddManager = () => {
           </div>
 
           {/* Form Actions */}
-          <div className="flex flex-col md:flex-row gap-4 col-span-1 md:col-span-2 pt-4">
+          <div className="flex flex-col md:flex-row gap-4 col-span-1 md:col-span-2 pt-4 mt-4">
             <Button
               type="button"
               onClick={() => navigate(-1)}
-              className="px-6 py-3 rounded font-semibold border border-red-500 bg-transparent text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+              className="px-6 py-3 rounded font-semibold border border-red-500 bg-transparent text-red-500 hover:bg-red-500 hover:text-white transition-colors w-full md:w-auto"
             >
               إلغاء
             </Button>
 
             <Button
               type="submit"
-              className="bg-[#BE8D4A] text-white px-6 py-3 rounded font-semibold hover:bg-[#a67a3f] transition-colors"
+              className="bg-[#BE8D4A] text-white px-6 py-3 rounded font-semibold hover:bg-[#a67a3f] transition-colors w-full md:w-auto"
             >
               حفظ المدير
             </Button>

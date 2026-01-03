@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import TablePage from '../components/TablePage';
 import useSchools from '../hooks/schools/useSchools';
 import useSchoolStatus from '../hooks/schools/useSchoolStatus';
+import { toast } from "react-toastify";
 
 // Columns configuration updated to match API data structure
 const columns = [
@@ -90,38 +91,56 @@ export default function Schools() {
     }
   }, [schools]);
 
+  const canEditOrDelete = (schoolType, schoolStatusId) => {
+    if (schoolType === "New") return schoolStatusId === 4
+    if (schoolType === "Exist") return schoolStatusId === 1
+    return false
+  }
+
   // Actions configuration
   const actionsConfig = [
     {
       label: 'تعديل',
       onClick: (item) => {
-        console.log('Edit school:', item);
-        // Navigate to create-school page with edit mode
+        const data = item._fullData || item
+        const statusId = data.SchoolStatus_Id
+  
+        if (!canEditOrDelete(schoolType, statusId)) {
+          toast.warning("حالة المدرسة لا تمكنك من هذا الإجراء")
+          return
+        }
+  
         navigate('/requests/create-school', {
           state: {
-            schoolData: item._fullData || item,
-            action: 1, // 1 = edit
-            schoolType: schoolType
+            schoolData: data,
+            action: 1, // edit
+            schoolType
           }
-        });
+        })
       },
     },
     {
       label: 'حذف',
+      danger: true,
       onClick: (item) => {
-        console.log('Delete school:', item);
-        // Navigate to create-school page with delete mode
+        const data = item._fullData || item
+        const statusId = data.SchoolStatus_Id
+  
+        if (!canEditOrDelete(schoolType, statusId)) {
+          toast.warning("حالة المدرسة لا تمكنك من هذا الإجراء")
+          return
+        }
+  
         navigate('/requests/create-school', {
           state: {
-            schoolData: item._fullData || item,
-            action: 2, // 2 = delete
-            schoolType: schoolType
+            schoolData: data,
+            action: 2, // delete
+            schoolType
           }
-        });
+        })
       },
-      danger: true,
     },
-  ];
+  ]
 
   // Filter configuration
   const filterConfig = [

@@ -360,7 +360,7 @@ const CreatSchoolForm = ({schoolType , setSchoolType, schoolData = null, action 
       )}
 
       <div className="flex items-center font-bold gap-2 p-4 md:p-6 bg-white rounded-md">
-        <span className="bg-black rounded-md flex-shrink-0" onClick={()=>{setSchoolType && setSchoolType(null)}}>
+        <span className="bg-black rounded-md flex-shrink-0" onClick={()=>{navigate(-1)}}>
           <ChevronRight className="text-white cursor-pointer" height={20} width={20}/>
         </span>
         <h1 className="text-lg md:text-xl">

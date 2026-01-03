@@ -18,6 +18,7 @@ import AccountInfo from "./pages/AccountInfo.jsx"
 import { Navigate, Route, Routes } from 'react-router-dom'
 import AddManger from './components/CreateSchool/Add Manger/AddManger.jsx'
 import School from './pages/School.jsx'
+import AddMofwadMasogat from './pages/AddMofwadMasogat.jsx'
 
 function App() {
   return (
@@ -44,6 +45,7 @@ function App() {
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/managers" element={<Managers />} />
         <Route path="/account-info" element={<AccountInfo />} />
+        <Route path="/add-mofwad-masogat" element={<AddMofwadMasogat />} />
       </Route>
     </Routes>
   )
