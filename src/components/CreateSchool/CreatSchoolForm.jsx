@@ -11,13 +11,15 @@ import MapPicker from '../../components/MapPicker'
 import { DoTransaction, executeProcedure } from '../../services/apiServices'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
+import { useNavigate } from 'react-router-dom'
+import { ConfirmModal } from '../../global/global-modal/ConfirmModal'
 
 const fadeIn = {
   initial: { opacity: 0, y: 15 },
   animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
 }
 
-const CreatSchoolForm = ({schoolType , setSchoolType}) => {
+const CreatSchoolForm = ({schoolType , setSchoolType, schoolData = null, action = 0}) => {
   const siteImagesRef = useRef(null)
   const neighborsApprovalRef = useRef(null)
 
@@ -25,15 +27,21 @@ const CreatSchoolForm = ({schoolType , setSchoolType}) => {
     siteImages: null,
     neighborsApproval: null,
   })
-  
+  const navigate = useNavigate() ; 
   const [selectedBaladiaId, setSelectedBaladiaId] = useState(null)
   const [isMapOpen, setIsMapOpen] = useState(false)
   const [selectedLocation, setSelectedLocation] = useState(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  
+  // Determine the actual action: 0 = add, 1 = edit, 2 = delete
+  const wantedAction = action || (schoolData ? 1 : 0)
+  const isEditMode = wantedAction === 1
+  const isDeleteMode = wantedAction === 2
 
   const userData = useSelector((state) => state.auth.userData);
   console.log(userData);
   
-  const {Baladias} = useBaladia() ;
+  const {Baladias, loading: baladiasLoading} = useBaladia() ;
   const {BaldiaOffice} = useBaldiaOffice(selectedBaladiaId);
   
   const { uploadSingleFile } = useUploadFiles()
@@ -52,6 +60,92 @@ const CreatSchoolForm = ({schoolType , setSchoolType}) => {
       setValue("companyName", userData.CompanyName, { shouldValidate: true })
     }
   }, [userData, setValue])
+
+  // Pre-populate form when editing
+  useEffect(() => {
+    if (schoolData && isEditMode && !baladiasLoading && Baladias && Baladias.length > 0) {
+      // Set basic fields
+      setValue("schoolName", schoolData.School_FullName || schoolData.FullName || "", { shouldValidate: true })
+      
+      // Set municipality - handle both Baldia_Id and BaldiaId
+      const baladiaId = schoolData.Baldia_Id || schoolData.BaldiaId
+      if (baladiaId) {
+        // Ensure type consistency - convert to number if Baladias use number IDs
+        const baladiaIdNum = typeof Baladias[0]?.Id === 'number' ? Number(baladiaId) : baladiaId.toString()
+        const baladiaIdStr = baladiaIdNum.toString()
+        
+        // Verify the baladia exists in the list
+        const baladiaExists = Baladias.some(b => b.Id.toString() === baladiaIdStr || b.Id === baladiaIdNum)
+        if (baladiaExists) {
+          setValue("municipality", baladiaIdStr, { shouldValidate: true })
+          setSelectedBaladiaId(baladiaIdStr)
+        }
+      }
+      
+      // Set location
+      const lat = schoolData.latitude || schoolData.Latitude
+      const lng = schoolData.longitude || schoolData.Longitude
+      if (lat && lng) {
+        const location = {
+          lat: parseFloat(lat),
+          lng: parseFloat(lng)
+        }
+        setSelectedLocation(location)
+        setValue("latitude", location.lat, { shouldValidate: true })
+        setValue("longitude", location.lng, { shouldValidate: true })
+      }
+      
+      // Set file IDs (if they exist) - handle different field name variations
+      const locationPictureAttach = schoolData.LocationPictureAttach || schoolData.locationPictureAttach
+      if (locationPictureAttach) {
+        setValue("siteImagesFileId", locationPictureAttach, { shouldValidate: true })
+        setUploadedFiles(prev => ({
+          ...prev,
+          siteImages: {
+            id: locationPictureAttach,
+            name: "صورة الموقع المرفقة",
+            type: "siteImages"
+          }
+        }))
+      }
+      
+      const neighborsApproveAttach = schoolData.neighborsApproveAttach || schoolData.NeighborsApproveAttach
+      if (neighborsApproveAttach) {
+        setValue("neighborsApprovalFileId", neighborsApproveAttach, { shouldValidate: true })
+        setUploadedFiles(prev => ({
+          ...prev,
+          neighborsApproval: {
+            id: neighborsApproveAttach,
+            name: "موافقة الجيران المرفقة",
+            type: "neighborsApproval"
+          }
+        }))
+      }
+      
+      // Set notes if available
+      if (schoolData.notes || schoolData.Notes) {
+        setValue("notes", schoolData.notes || schoolData.Notes, { shouldValidate: false })
+      }
+    }
+  }, [schoolData, isEditMode, setValue, baladiasLoading, Baladias])
+
+  // Set office after municipality and offices are loaded
+  useEffect(() => {
+    if (schoolData && isEditMode && selectedBaladiaId && BaldiaOffice && BaldiaOffice.length > 0) {
+      const officeId = schoolData.Office_Id || schoolData.OfficeId
+      if (officeId) {
+        // Ensure type consistency
+        const officeIdNum = typeof BaldiaOffice[0]?.Id === 'number' ? Number(officeId) : officeId.toString()
+        const officeIdStr = officeIdNum.toString()
+        
+        // Verify the office exists in the list
+        const officeExists = BaldiaOffice.some(o => o.Id.toString() === officeIdStr || o.Id === officeIdNum)
+        if (officeExists) {
+          setValue("office", officeIdStr, { shouldValidate: true })
+        }
+      }
+    }
+  }, [schoolData, isEditMode, selectedBaladiaId, BaldiaOffice, setValue])
 
 
   // Watch for municipality changes to update offices
@@ -157,7 +251,48 @@ const CreatSchoolForm = ({schoolType , setSchoolType}) => {
     )
   }
 
+  // Handle delete action
+  const handleDelete = async () => {
+    if (!schoolData || (!schoolData.id && !schoolData.Id)) {
+      toast.error("لا يمكن حذف المدرسة: بيانات غير صحيحة")
+      return
+    }
+
+    const schoolId = schoolData.id || schoolData.Id
+    
+    // For delete, we need to send minimal data with the school ID
+    // The first parameter in the data string is the ID
+    const response = await DoTransaction(
+      "dsaK2RNVIQXmf0/QbiS0Hg==",
+      `${schoolId}`,
+      2, // wanted action 2 = delete
+      "Id"
+    )
+    
+    console.log(response);
+    if(response.success != 200){
+      toast.error(response.errorMessage || "فشل حذف المدرسة")
+    } else {
+      toast.success("تم حذف المدرسة بنجاح")
+      setShowDeleteModal(false)
+      // Navigate back or refresh
+      if (setSchoolType) {
+        setSchoolType(null)
+      }
+      navigate(-1)
+    }
+  }
+
   const onSubmit = async (data) => {
+    // If delete mode, show confirmation modal
+    if (isDeleteMode) {
+      setShowDeleteModal(true)
+      return
+    }
+
+    // Get school ID for edit mode, 0 for add mode - handle both id and Id
+    const schoolId = (isEditMode && schoolData) ? (schoolData.id || schoolData.Id || 0) : 0
+    
     // Create the complete data object
     const formData = {
       // Form fields
@@ -183,39 +318,24 @@ const CreatSchoolForm = ({schoolType , setSchoolType}) => {
         : null,
     }
     
-    // console.log("Form Data Submitted:", formData)
-    
-    // // You can also log in a more structured way:
-    // console.log("=== SCHOOL FORM SUBMISSION ===")
-    // console.log("School Type:", schoolType)
-    // console.log("Delegate Name:", data.delegateName)
-    // console.log("Company Name:", data.companyName)
-    // console.log("School Name:", data.schoolName)
-    // console.log("Location:", selectedLocation)
-    // console.log("Latitude:", data.latitude)
-    // console.log("Longitude:", data.longitude)
-    // console.log("Municipality ID:", data.municipality)
-    // console.log("Municipality Name:", formData.municipalityName)
-    // console.log("Office ID:", data.office)
-    // console.log("Office Name:", formData.officeName)
-    // console.log("Site Images File ID:", data.siteImagesFileId)
-    // console.log("Neighbors Approval File ID:", data.neighborsApprovalFileId)
-    // console.log("Notes:", data.notes)
-    // console.log("Attachments:", uploadedFiles)
-    // console.log("=== END ===")
-    
-    const response = await DoTransaction("dsaK2RNVIQXmf0/QbiS0Hg==" ,
-      `0#${data.schoolName}#${userData.Id}#${data.latitude}#${data.longitude}#${selectedBaladiaId}#${data.office}#${data.siteImagesFileId}#${data.neighborsApprovalFileId}#${schoolType}#0#0###0##0#0#0##0`,
-      0 ,
+    const response = await DoTransaction(
+      "dsaK2RNVIQXmf0/QbiS0Hg==",
+      `${schoolId}#${data.schoolName}#${userData.Id}#${data.latitude}#${data.longitude}#${selectedBaladiaId}#${data.office}#${data.siteImagesFileId || 0}#${data.neighborsApprovalFileId || 0}#${schoolType}#0#${schoolType=="New"?4:1}###0##0#0#0##0`,
+      wantedAction, // wanted action 0 add , 1 edit , 2 delete
       "Id#FullName#Mofwad_Id#latitude#longitude#Baldia_Id#Office_Id#LocationPictureAttach#neighborsApproveAttach#NewOrExist#SchoolManager_Id#SchoolStatus_Id#UniqueId#EducationLevel_Ids#SchoolGenderType_Id#EducationClass_Ids#EducationPeriod_Id#BuildingType_Id#BuildingAllowance_Id#Labor_Ids#BuildingOwnAttach"
     )
+    
     console.log(response);
     if(response.success != 200){
-      toast.error(response.errorMessage)
-    }else{
-      toast.success("تم اضافة المدرسة بنجاح")
+      toast.error(response.errorMessage || "فشل العملية")
+    } else {
+      const successMessage = isEditMode ? "تم تعديل المدرسة بنجاح" : "تم اضافة المدرسة بنجاح"
+      toast.success(successMessage)
+      // Navigate back after successful edit
+      if (isEditMode && setSchoolType) {
+        setSchoolType(null)
+      }
     }
-    
   }
 
   return (
@@ -225,23 +345,45 @@ const CreatSchoolForm = ({schoolType , setSchoolType}) => {
         onClose={() => setIsMapOpen(false)}
         onLocationSelect={handleLocationSelect}
       />
+      
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <ConfirmModal
+              desc={`هل أنت متأكد من حذف المدرسة "${schoolData?.School_FullName || schoolData?.FullName || schoolData?.schoolName || 'هذه المدرسة'}"؟`}
+              confirmFunc={handleDelete}
+              onClose={() => setShowDeleteModal(false)}
+            />
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center font-bold gap-2 p-4 md:p-6 bg-white rounded-md">
-        <span className="bg-black rounded-md flex-shrink-0" onClick={()=>{setSchoolType(null)}}>
+        <span className="bg-black rounded-md flex-shrink-0" onClick={()=>{setSchoolType && setSchoolType(null)}}>
           <ChevronRight className="text-white cursor-pointer" height={20} width={20}/>
         </span>
-        <h1 onClick={()=>{setSchoolType(null)}} className="text-lg md:text-xl">{schoolType == "Exist" ? "مدرسة قائمة" : "مدرسة جديدة"}</h1>
+        <h1 className="text-lg md:text-xl">
+          {isDeleteMode 
+            ? "حذف المدرسة" 
+            : isEditMode 
+              ? (schoolType == "Exist" ? "تعديل مدرسة قائمة" : "تعديل مدرسة جديدة")
+              : (schoolType == "Exist" ? "مدرسة قائمة" : "مدرسة جديدة")
+          }
+        </h1>
       </div>
 
-      <motion.div
-        variants={fadeIn}
-        initial="initial"
-        animate="animate"
-        className="flex flex-col gap-6 p-4 md:p-6 bg-white rounded-md"
-      >
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6"
+      {!isDeleteMode && (
+        <motion.div
+          variants={fadeIn}
+          initial="initial"
+          animate="animate"
+          className="flex flex-col gap-6 p-4 md:p-6 bg-white rounded-md"
         >
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6"
+          >
           {/* Hidden location fields */}
           <input type="hidden" {...register("latitude", { required: true })} />
           <input type="hidden" {...register("longitude", { required: true })} />
@@ -347,7 +489,7 @@ const CreatSchoolForm = ({schoolType , setSchoolType}) => {
             >
               <option value="">اختر البلدية</option>
               {Baladias?.map((baladia) => (
-                <option key={baladia.Id} value={baladia.Id}>
+                <option key={baladia.Id} value={baladia.Id.toString()}>
                   {baladia.FullName}
                 </option>
               ))}
@@ -365,7 +507,7 @@ const CreatSchoolForm = ({schoolType , setSchoolType}) => {
             >
               <option value="">اختر المكتب</option>
               {selectedMunicipality && BaldiaOffice?.map((office) => (
-                <option key={office.Id} value={office.Id}>
+                <option key={office.Id} value={office.Id.toString()}>
                   {office.OfficeName}
                 </option>
               ))}
@@ -448,44 +590,107 @@ const CreatSchoolForm = ({schoolType , setSchoolType}) => {
           </div>
         </form>
       </motion.div>
+      )}
+
+      {isDeleteMode && (
+        <motion.div
+          variants={fadeIn}
+          initial="initial"
+          animate="animate"
+          className="flex flex-col gap-6 p-4 md:p-6 bg-white rounded-md"
+        >
+          <div className="text-center py-8">
+            <p className="text-lg text-gray-700 mb-4">
+              هل أنت متأكد من حذف المدرسة <strong>"{schoolData?.School_FullName || schoolData?.FullName || schoolData?.schoolName || 'هذه المدرسة'}"</strong>؟
+            </p>
+            <p className="text-sm text-gray-500">لا يمكن التراجع عن هذا الإجراء</p>
+          </div>
+        </motion.div>
+      )}
 
       <div className="flex flex-col items-center font-bold gap-6 p-4 md:p-6 bg-white rounded-md">
-        <Button
-          type="submit"
-          onClick={handleSubmit(onSubmit)}
-          className="bg-[#BE8D4A] text-white px-6 py-4 rounded font-semibold hover:bg-[#a67a3f] transition-colors w-full"
-        >
-          حفظ المدرسة
-        </Button>
-        <div className='flex items-center justify-between w-full gap-12'>
+        {!isDeleteMode && (
           <Button
-            type="button"
-            className="px-6 py-4 rounded font-semibold w-1/4 border border-red-500 bg-transparent text-red-500 hover:bg-red-500 hover:text-white   transition-colors"
+            type="submit"
+            onClick={handleSubmit(onSubmit)}
+            className="bg-[#BE8D4A] text-white px-6 py-4 rounded font-semibold hover:bg-[#a67a3f] transition-colors w-full"
           >
-            إلغاء
+            {isEditMode ? "حفظ التعديلات" : "حفظ المدرسة"}
           </Button>
+        )}
+        
+        {isDeleteMode && (
+          <div className="flex gap-4 w-full">
+            <Button
+              type="button"
+              onClick={() => {
+                if (setSchoolType) setSchoolType(null)
+                navigate(-1)
+              }}
+              className="px-6 py-4 rounded font-semibold w-1/2 border border-gray-500 bg-transparent text-gray-700 hover:bg-gray-100 transition-colors"
+            >
+              إلغاء
+            </Button>
+            <Button
+              type="button"
+              onClick={() => setShowDeleteModal(true)}
+              className="px-6 py-4 rounded font-semibold w-1/2 bg-red-500 text-white hover:bg-red-600 transition-colors"
+            >
+              حذف المدرسة
+            </Button>
+          </div>
+        )}
+        {!isDeleteMode && !isEditMode && (
+          <div className='flex items-center justify-between w-full gap-12'>
+            <Button
+              type="button"
+              onClick={() => {
+                if (setSchoolType) setSchoolType(null)
+                navigate(-1)
+              }}
+              className="px-6 py-4 rounded font-semibold w-1/4 border border-red-500 bg-transparent text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+            >
+              إلغاء
+            </Button>
 
-          <Button
-            type="button"
-            className="bg-[#BE8D4A] text-white px-6 py-4 rounded font-semibold hover:bg-[#a67a3f] transition-colors w-1/4"
-          >
-            إضافة مدير
-          </Button>
+            <Button
+              type="button"
+              onClick={()=>{navigate("/requests/add-manger")}}
+              className="bg-[#BE8D4A] text-white px-6 py-4 rounded font-semibold hover:bg-[#a67a3f] transition-colors w-1/4"
+            >
+              إضافة مدير
+            </Button>
 
-          <Button
-            type="button"
-            className="bg-[#BE8D4A] text-white px-6 py-4 rounded font-semibold hover:bg-[#a67a3f] transition-colors w-1/4"
-          >
-            إضافة مسوغات
-          </Button>
+            <Button
+              type="button"
+              className="bg-[#BE8D4A] text-white px-6 py-4 rounded font-semibold hover:bg-[#a67a3f] transition-colors w-1/4"
+            >
+              إضافة مسوغات
+            </Button>
 
-          <Button
-            type="button"
-            className="bg-[#BE8D4A] text-white px-6 py-4 rounded font-semibold hover:bg-[#a67a3f] transition-colors w-1/4"
-          >
-            إرسال الطلب 
-          </Button>
-        </div>
+            <Button
+              type="button"
+              className="bg-[#BE8D4A] text-white px-6 py-4 rounded font-semibold hover:bg-[#a67a3f] transition-colors w-1/4"
+            >
+              إرسال الطلب 
+            </Button>
+          </div>
+        )}
+        
+        {isEditMode && (
+          <div className='flex items-center justify-between w-full gap-12'>
+            <Button
+              type="button"
+              onClick={() => {
+                if (setSchoolType) setSchoolType(null)
+                navigate(-1)
+              }}
+              className="px-6 py-4 rounded font-semibold w-1/2 border border-red-500 bg-transparent text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+            >
+              إلغاء
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   )

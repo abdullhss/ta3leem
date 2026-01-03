@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import TablePage from '../components/TablePage';
 import useSchools from '../hooks/schools/useSchools';
 import useSchoolStatus from '../hooks/schools/useSchoolStatus';
@@ -7,12 +7,12 @@ import useSchoolStatus from '../hooks/schools/useSchoolStatus';
 // Columns configuration updated to match API data structure
 const columns = [
   { uid: 'id', name: 'ID' },
+  { uid: 'Mofwad_FullName', name: 'المفوض' },
   { uid: 'School_FullName', name: 'اسم المدرسة' },
-  { uid: 'Mofwad_FullName', name: 'الموفد' },
   { uid: 'Baldia_FullName', name: 'البلدية' },
-  { uid: 'LicenseStatus', name: 'حالة الترخيص' },
   { uid: 'OfficeName', name: 'المكتب' },
-  { uid: 'ChamberCommerceStatus', name: 'حالة غرفة التجارة' },
+  { uid: 'LicenseStatus', name: 'حالة الترخيص' },
+  { uid: 'ChamberCommerceStatus', name: 'حالة المزاولة' },
   { uid: 'actions', name: 'الإجراءات' },
 ];
 
@@ -20,7 +20,7 @@ const columns = [
 export default function Schools() {
   const { type } = useParams();
   // Map 'new' to 'Exist' and 'old' to 'Old', default to 'Exist'
-  const schoolType = type === 'old' ? 'Old' : 'Exist';
+  const schoolType = type === 'old' ? 'Exist' : 'New';
   
   const [tableData, setTableData] = useState([]);
   const [searchText, setSearchText] = useState('');
@@ -28,6 +28,8 @@ export default function Schools() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   
+  const navigate = useNavigate() ;
+
   // Calculate startNumber for pagination (1-indexed starting record number)
   const startNumber = (currentPage - 1) * rowsPerPage + 1;
   
@@ -45,7 +47,7 @@ export default function Schools() {
     value: status.Id,
     label: status.StatusDesc
   }));
-  // Transform data for table
+  // Transform data for table - preserve full school data
   const transformDataForTable = (data) => {
     return data.map(school => ({
       id: school.id,
@@ -56,6 +58,8 @@ export default function Schools() {
       OfficeName: school.OfficeName || '',
       ChamberCommerceStatus: school.ChamberCommerceStatus || '',
       createdAt: school.createdAt || school.created_at || new Date(),
+      // Preserve full school data for edit/delete
+      _fullData: school
     }));
   };
 
@@ -92,20 +96,28 @@ export default function Schools() {
       label: 'تعديل',
       onClick: (item) => {
         console.log('Edit school:', item);
-        const schoolName = item.School_FullName;
-        alert(`تعديل المدرسة: ${schoolName}`);
+        // Navigate to create-school page with edit mode
+        navigate('/requests/create-school', {
+          state: {
+            schoolData: item._fullData || item,
+            action: 1, // 1 = edit
+            schoolType: schoolType
+          }
+        });
       },
     },
     {
       label: 'حذف',
       onClick: (item) => {
         console.log('Delete school:', item);
-        const schoolName = item.School_FullName;
-        
-        if (window.confirm(`هل أنت متأكد من حذف ${schoolName}؟`)) {
-          alert(`تم حذف المدرسة: ${schoolName}`);
-          // Here you would typically make an API call to delete the school
-        }
+        // Navigate to create-school page with delete mode
+        navigate('/requests/create-school', {
+          state: {
+            schoolData: item._fullData || item,
+            action: 2, // 2 = delete
+            schoolType: schoolType
+          }
+        });
       },
       danger: true,
     },
@@ -143,6 +155,7 @@ export default function Schools() {
         AddButtonProps={{ title: "إضافة مدرسة", path: "/requests/create-school" }}
         actionsConfig={actionsConfig}
         searchPlaceholder="ابحث باسم المدرسة..."
+        onDoubleClick={(school)=>{navigate(`${school.id}/${school._fullData.Office_Id}`)}}
       />
     </div>
   );

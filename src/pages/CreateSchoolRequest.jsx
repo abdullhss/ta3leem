@@ -1,12 +1,38 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Button } from "../ui/button";
 import CreateSchoolForm from "../components/CreateSchool/CreatSchoolForm";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function CreateSchoolRequest() {
+  const location = useLocation();
   const [schoolType, setSchoolType] = useState(null);
+  const [schoolData, setSchoolData] = useState(null);
+  const [action, setAction] = useState(0); // 0 = add, 1 = edit, 2 = delete
 
   const currentYear = new Date().getFullYear();
+
+  // Check if we're in edit/delete mode from navigation state
+  useEffect(() => {
+    if (location.state) {
+      const { schoolData: navSchoolData, action: navAction, schoolType: navSchoolType } = location.state;
+      
+      if (navSchoolData && (navAction === 1 || navAction === 2)) {
+        // Edit or delete mode - set school type and data directly
+        setSchoolData(navSchoolData);
+        setAction(navAction);
+        // Determine school type from data or use provided type
+        if (navSchoolType) {
+          setSchoolType(navSchoolType);
+        } else if (navSchoolData.NewOrExist) {
+          setSchoolType(navSchoolData.NewOrExist);
+        } else {
+          // Default to "Exist" if not specified
+          setSchoolType("Exist");
+        }
+      }
+    }
+  }, [location.state]);
 
   return (
     <div className="p-6 w-full h-full flex flex-col gap-8">
@@ -56,7 +82,12 @@ export default function CreateSchoolRequest() {
             exit={{ opacity: 0, y: -30 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
           >
-            <CreateSchoolForm schoolType={schoolType} setSchoolType={setSchoolType} />
+            <CreateSchoolForm 
+              schoolType={schoolType} 
+              setSchoolType={setSchoolType}
+              schoolData={schoolData}
+              action={action}
+            />
           </motion.div>
         )}
       </AnimatePresence>

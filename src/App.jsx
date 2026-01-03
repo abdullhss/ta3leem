@@ -16,6 +16,8 @@ import Notifications from "./pages/Notifications.jsx"
 import Managers from "./pages/Managers.jsx"
 import AccountInfo from "./pages/AccountInfo.jsx"
 import { Navigate, Route, Routes } from 'react-router-dom'
+import AddManger from './components/CreateSchool/Add Manger/AddManger.jsx'
+import School from './pages/School.jsx'
 
 function App() {
   return (
@@ -29,8 +31,10 @@ function App() {
         <Route path="/school" element={<Navigate to="/schools/new" replace />} />
         <Route path="/schools" element={<Navigate to="/schools/new" replace />} />
         <Route path="/schools/:type" element={<Schools />} />
+        <Route path="/schools/:type/:id/:Office_id" element={<School/>} />
         <Route path="/requests" element={<Requests />} />
         <Route path="/requests/create-school" element={<CreateSchoolRequest />} />
+        <Route path="/requests/add-manger" element={<AddManger />} />
         <Route path="/requests/transfer-school" element={<TransferSchoolRequest />} />
         <Route path="/requests/assign-principal" element={<AssignPrincipalRequest />} />
         <Route path="/requests/other" element={<OtherRequests />} />
