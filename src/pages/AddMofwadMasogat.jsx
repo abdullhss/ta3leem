@@ -1,5 +1,5 @@
 import { ChevronRight, Paperclip, X, Upload } from 'lucide-react'
-import React, { useRef, useState, useMemo } from 'react'
+import React, { useRef, useState, useMemo, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -11,6 +11,7 @@ import { Button } from '../ui/button'
 import useMofwad from '../hooks/Mofwad/useMofwad'
 import { useSelector } from 'react-redux'
 import { DoTransaction } from '../services/apiServices'
+import FileViewer from '../components/FileViewer'
 
 const fadeIn = {
   initial: { opacity: 0, y: 15 },
@@ -24,7 +25,23 @@ const AddMofwadMasogat = () => {
   const { Mofwad } = useMofwad(userData?.Id);
   const data = Mofwad?.[0];
   console.log("Mofwad Data:", data);
-  
+    // Check if all required attachments are provided and not 0
+    const hasAllAttachments = () => {
+      const requiredAttachments = [
+        data?.WorkOfficeStatementAttach,
+        data?.SecurityCardAttach,
+        data?.PictureAttach,
+        data?.HealthCardAttach,
+        data?.BirthCertificateAttach,
+      ];
+      
+      // Add WorkforceCardAttach only for non-nationals (nationality != 1)
+      if (data?.Nationality_Id != 1) {
+        requiredAttachments.push(data?.WorkforceCardAttach);
+      }
+      
+      return requiredAttachments.every(attach => attach && attach !== 0);
+    };
   // Create Zod schema based on nationality
   const formSchema = useMemo(() => {
     const isNational = data?.Nationality_Id === 1;
@@ -110,6 +127,89 @@ const AddMofwadMasogat = () => {
     resolver: zodResolver(formSchema),
     mode: 'onChange',
   })
+
+  // Pre-populate form with existing file IDs when data is available
+  useEffect(() => {
+    if (data) {
+      // Personal Photo (PictureAttach)
+      if (data.PictureAttach && data.PictureAttach !== 0) {
+        setValue("personalPhotoFileId", String(data.PictureAttach), { shouldValidate: true })
+        setUploadedFiles(prev => ({
+          ...prev,
+          personalPhoto: {
+            id: data.PictureAttach,
+            name: "صورة شخصية",
+            type: "personalPhoto"
+          }
+        }))
+      }
+
+      // Birth Certificate (BirthCertificateAttach)
+      if (data.BirthCertificateAttach && data.BirthCertificateAttach !== 0) {
+        setValue("birthCertificateFileId", String(data.BirthCertificateAttach), { shouldValidate: true })
+        setUploadedFiles(prev => ({
+          ...prev,
+          birthCertificate: {
+            id: data.BirthCertificateAttach,
+            name: "شهادة ميلاد",
+            type: "birthCertificate"
+          }
+        }))
+      }
+
+      // Health Card (HealthCardAttach)
+      if (data.HealthCardAttach && data.HealthCardAttach !== 0) {
+        setValue("healthCardFileId", String(data.HealthCardAttach), { shouldValidate: true })
+        setUploadedFiles(prev => ({
+          ...prev,
+          healthCard: {
+            id: data.HealthCardAttach,
+            name: "البطاقة الصحية",
+            type: "healthCard"
+          }
+        }))
+      }
+
+      // Criminal Record (SecurityCardAttach)
+      if (data.SecurityCardAttach && data.SecurityCardAttach !== 0) {
+        setValue("criminalRecordFileId", String(data.SecurityCardAttach), { shouldValidate: true })
+        setUploadedFiles(prev => ({
+          ...prev,
+          criminalRecord: {
+            id: data.SecurityCardAttach,
+            name: "الخلو من السوابق الجنائية",
+            type: "criminalRecord"
+          }
+        }))
+      }
+
+      // Labor Office (WorkOfficeStatementAttach)
+      if (data.WorkOfficeStatementAttach && data.WorkOfficeStatementAttach !== 0) {
+        setValue("laborOfficeFileId", String(data.WorkOfficeStatementAttach), { shouldValidate: true })
+        setUploadedFiles(prev => ({
+          ...prev,
+          laborOffice: {
+            id: data.WorkOfficeStatementAttach,
+            name: "إفادة من مكتب العمل",
+            type: "laborOffice"
+          }
+        }))
+      }
+
+      // Workforce Card (WorkforceCardAttach) - only for non-nationals
+      if (data.WorkforceCardAttach && data.WorkforceCardAttach !== 0) {
+        setValue("workforceCardFileId", String(data.WorkforceCardAttach), { shouldValidate: true })
+        setUploadedFiles(prev => ({
+          ...prev,
+          workforceCard: {
+            id: data.WorkforceCardAttach,
+            name: "إفادة القوى العاملة",
+            type: "workforceCard"
+          }
+        }))
+      }
+    }
+  }, [data, setValue])
 
   const handleFileUpload = async (file, type) => {
     if (!file) return
@@ -351,6 +451,20 @@ const AddMofwadMasogat = () => {
                   onChange={(e) => handleFileUpload(e.target.files[0], "personalPhoto")}
                 />
               </div>
+              
+              {/* Show existing personal photo if available */}
+              {data?.PictureAttach && data.PictureAttach !== 0 && (
+                <div className="flex items-center gap-2">
+                  <FileViewer 
+                    id={data.PictureAttach}
+                    customButton={
+                      <span className="text-sm font-bold text-[#BE8D4A] cursor-pointer hover:underline">
+                        عرض الصورة الحالية
+                      </span>
+                    }
+                  />
+                </div>
+              )}
             </div>
             
             <input
@@ -377,6 +491,18 @@ const AddMofwadMasogat = () => {
                   </button>
                   
                   <FileDisplay file={uploadedFiles.birthCertificate} />
+                  
+                  {/* Show existing file if available */}
+                  {data?.BirthCertificateAttach && data.BirthCertificateAttach !== 0 && (
+                    <FileViewer 
+                      id={data.BirthCertificateAttach}
+                      customButton={
+                        <span className="text-sm font-bold text-[#BE8D4A] cursor-pointer hover:underline">
+                          عرض الملف الحالي
+                        </span>
+                      }
+                    />
+                  )}
                 </div>
                 {errors.birthCertificateFileId && (
                   <span className="text-red-500 text-sm mt-1">
@@ -406,6 +532,18 @@ const AddMofwadMasogat = () => {
                   </button>
                   
                   <FileDisplay file={uploadedFiles.healthCard} />
+                  
+                  {/* Show existing file if available */}
+                  {data?.HealthCardAttach && data.HealthCardAttach !== 0 && (
+                    <FileViewer 
+                      id={data.HealthCardAttach}
+                      customButton={
+                        <span className="text-sm font-bold text-[#BE8D4A] cursor-pointer hover:underline">
+                          عرض الملف الحالي
+                        </span>
+                      }
+                    />
+                  )}
                 </div>
                 {errors.healthCardFileId && (
                   <span className="text-red-500 text-sm mt-1">
@@ -435,6 +573,18 @@ const AddMofwadMasogat = () => {
                   </button>
                   
                   <FileDisplay file={uploadedFiles.criminalRecord} />
+                  
+                  {/* Show existing file if available */}
+                  {data?.SecurityCardAttach && data.SecurityCardAttach !== 0 && (
+                    <FileViewer 
+                      id={data.SecurityCardAttach}
+                      customButton={
+                        <span className="text-sm font-bold text-[#BE8D4A] cursor-pointer hover:underline">
+                          عرض الملف الحالي
+                        </span>
+                      }
+                    />
+                  )}
                 </div>
                 {errors.criminalRecordFileId && (
                   <span className="text-red-500 text-sm mt-1">
@@ -464,6 +614,18 @@ const AddMofwadMasogat = () => {
                   </button>
                   
                   <FileDisplay file={uploadedFiles.laborOffice} />
+                  
+                  {/* Show existing file if available */}
+                  {data?.WorkOfficeStatementAttach && data.WorkOfficeStatementAttach !== 0 && (
+                    <FileViewer 
+                      id={data.WorkOfficeStatementAttach}
+                      customButton={
+                        <span className="text-sm font-bold text-[#BE8D4A] cursor-pointer hover:underline">
+                          عرض الملف الحالي
+                        </span>
+                      }
+                    />
+                  )}
                 </div>
                 {errors.laborOfficeFileId && (
                   <span className="text-red-500 text-sm mt-1">
@@ -494,6 +656,18 @@ const AddMofwadMasogat = () => {
                     </button>
                     
                     <FileDisplay file={uploadedFiles.workforceCard} />
+                    
+                    {/* Show existing file if available */}
+                    {data?.WorkforceCardAttach && data.WorkforceCardAttach !== 0 && (
+                      <FileViewer 
+                        id={data.WorkforceCardAttach}
+                        customButton={
+                          <span className="text-sm font-bold text-[#BE8D4A] cursor-pointer hover:underline">
+                            عرض الملف الحالي
+                          </span>
+                        }
+                      />
+                    )}
                   </div>
                   {errors.workforceCardFileId && (
                     <span className="text-red-500 text-sm mt-1">

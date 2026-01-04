@@ -1,14 +1,36 @@
-import { Plus } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import PDF from "../assets/PDF.svg";
 import useMofwad from "../hooks/Mofwad/useMofwad";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import FileViewer from "../components/FileViewer";
 
 export default function AccountInfo() {
   const userData = useSelector((state) => state.auth.userData);
   const { Mofwad } = useMofwad(userData?.Id);
   const navigate = useNavigate();
   const data = Mofwad?.[0];
+  console.log("Mofwad Data:", data);
+
+  // Check if all required attachments are provided and not 0
+  const hasAllAttachments = () => {
+    const requiredAttachments = [
+      data?.WorkOfficeStatementAttach,
+      data?.SecurityCardAttach,
+      data?.PictureAttach,
+      data?.HealthCardAttach,
+      data?.BirthCertificateAttach,
+    ];
+    
+    // Add WorkforceCardAttach only for non-nationals (nationality != 1)
+    if (data?.Nationality_Id != 1) {
+      requiredAttachments.push(data?.WorkforceCardAttach);
+    }
+    
+    return requiredAttachments.every(attach => attach && attach !== 0);
+  };
+
+  const allAttachmentsProvided = hasAllAttachments();
 
   return (
     <div className="p-6 flex flex-col gap-6 w-full">
@@ -75,7 +97,10 @@ export default function AccountInfo() {
                 </p>
               </div>
               {data?.SalbyCertificateAttach ? (
-                <span className="text-sm font-bold text-[#BE8D4A]">عرض</span>
+                <FileViewer 
+                  id={data.SalbyCertificateAttach}
+                  customButton={<span className="text-sm font-bold text-[#BE8D4A] cursor-pointer">عرض</span>}
+                />
               ) : null}
             </div>
           </div>
@@ -93,7 +118,10 @@ export default function AccountInfo() {
                   </p>
                 </div>
                 {data?.NationalNumAttach ? (
-                  <span className="text-sm font-bold text-[#BE8D4A]">عرض</span>
+                  <FileViewer 
+                    id={data.NationalNumAttach}
+                    customButton={<span className="text-sm font-bold text-[#BE8D4A] cursor-pointer">عرض</span>}
+                  />
                 ) : null}
               </div>
             </div>
@@ -101,13 +129,162 @@ export default function AccountInfo() {
         </div>
       </div>
 
+      
+      {/* مسوغات المفوض Section */}
       <div className="bg-white rounded-lg p-6 flex w-full items-center justify-between gap-4">
         <h1 className="font-bold text-lg">مسوغات المفوض</h1>
         <div className="flex items-center gap-2">
           <button className="bg-[#BE8D4A] text-white rounded-md p-0.5" onClick={() => navigate("/add-mofwad-masogat")}>
-            <Plus size={16} />
+            {allAttachmentsProvided ? <Pencil size={16} /> : <Plus size={16} />}
           </button>
-          <span className="font-bold text-lg">إضافة المسوغات</span>
+          <span className="font-bold text-lg">
+            {allAttachmentsProvided ? "تعديل" : "إضافة"} المسوغات
+          </span>
+        </div>
+      </div>
+      
+      {/* New Attachments Section */}
+      <div className="rounded-lg">
+        <div className="flex flex-col gap-6">
+
+          <div className="flex w-full items-center justify-between gap-6">
+            {/* الصور الشخصية - Single Card */}
+            <div className="w-full bg-white rounded-lg p-6 h-full">
+              <div className="flex flex-col justify-between gap-2 w-full">
+                <p className="text-sm font-bold text-[#828282] mb-2">الصور الشخصية</p>
+                <div className="w-full flex items-center justify-between pl-6">
+                  <div className="flex items-center justify-between gap-2">
+                    <img src={PDF} alt="certificate" />
+                    <p className="text-sm font-bold text-[#828282]">
+                      {data?.PictureAttach ? "مرفق.pdf" : "لا يوجد"}
+                    </p>
+                  </div>
+                  {data?.PictureAttach ? (
+                    <FileViewer 
+                      id={data.PictureAttach}
+                      customButton={<span className="text-sm font-bold text-[#BE8D4A] cursor-pointer">عرض</span>}
+                    />
+                  ) : null}
+                </div>
+              </div>
+            </div>
+
+            {/* شهادة ميلاد | البطاقة الصحية - Two in single card */}
+            <div className="flex w-full gap-6 h-full">
+              <div className="flex w-full items-center justify-between p-6 rounded-lg bg-white">
+                <div className="flex flex-col justify-between gap-2 w-full">
+                  <p className="text-sm font-bold text-[#828282]">شهادة ميلاد</p>
+                  <div className="w-full flex items-center justify-between pl-6">
+                    <div className="flex items-center justify-between gap-2">
+                      <img src={PDF} alt="certificate" />
+                      <p className="text-sm font-bold text-[#828282]">
+                        {data?.BirthCertificateAttach ? "مرفق.pdf" : "لا يوجد"}
+                      </p>
+                    </div>
+                    {data?.BirthCertificateAttach ? (
+                      <FileViewer 
+                        id={data.BirthCertificateAttach}
+                        customButton={<span className="text-sm font-bold text-[#BE8D4A] cursor-pointer">عرض</span>}
+                      />
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="flex flex-col justify-between gap-2 border-r border-[#C0C0C0] pr-6 w-full">
+                  <div className="flex flex-col justify-between gap-2 w-full">
+                    <p className="text-sm font-bold text-[#828282]">
+                      البطاقة الصحية
+                    </p>
+                    <div className="w-full flex items-center justify-between pl-6">
+                      <div className="flex items-center justify-between gap-2">
+                        <img src={PDF} alt="certificate" />
+                        <p className="text-sm font-bold text-[#828282]">
+                          {data?.HealthCardAttach ? "مرفق.pdf" : "لا يوجد"}
+                        </p>
+                      </div>
+                      {data?.HealthCardAttach ? (
+                        <FileViewer 
+                          id={data.HealthCardAttach}
+                          customButton={<span className="text-sm font-bold text-[#BE8D4A] cursor-pointer">عرض</span>}
+                        />
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Last 3 attachments in single row on desktop */}
+          <div className="flex w-full gap-6">
+            {/* الخلو من السوابق الجنائية | إفادة من مكتب العمل - Full width single card */}
+            <div className="flex w-full items-center justify-between p-6 rounded-lg bg-white">
+              <div className="flex flex-col justify-between gap-2 w-full">
+                <p className="text-sm font-bold text-[#828282]">الخلو من السوابق الجنائية</p>
+                <div className="w-full flex items-center justify-between pl-6">
+                  <div className="flex items-center justify-between gap-2">
+                    <img src={PDF} alt="certificate" />
+                    <p className="text-sm font-bold text-[#828282]">
+                      {data?.SecurityCardAttach ? "مرفق.pdf" : "لا يوجد"}
+                    </p>
+                  </div>
+                  {data?.SecurityCardAttach ? (
+                    <FileViewer 
+                      id={data.SecurityCardAttach}
+                      customButton={<span className="text-sm font-bold text-[#BE8D4A] cursor-pointer">عرض</span>}
+                    />
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="flex flex-col justify-between gap-2 border-r border-[#C0C0C0] pr-6 w-full">
+                <div className="flex flex-col justify-between gap-2 w-full">
+                  <p className="text-sm font-bold text-[#828282]">
+                    إفادة من مكتب العمل
+                  </p>
+                  <div className="w-full flex items-center justify-between pl-6">
+                    <div className="flex items-center justify-between gap-2">
+                      <img src={PDF} alt="certificate" />
+                      <p className="text-sm font-bold text-[#828282]">
+                        {data?.WorkOfficeStatementAttach ? "مرفق.pdf" : "لا يوجد"}
+                      </p>
+                    </div>
+                    {data?.WorkOfficeStatementAttach ? (
+                      <FileViewer 
+                        id={data.WorkOfficeStatementAttach}
+                        customButton={<span className="text-sm font-bold text-[#BE8D4A] cursor-pointer">عرض</span>}
+                      />
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+
+              {/* WorkforceCardAttach only for nationality != 1 */}
+              {data?.Nationality_Id != 1 && (
+                <div className="flex flex-col justify-between gap-2 border-r border-[#C0C0C0] pr-6 w-full">
+                  <div className="flex flex-col justify-between gap-2 w-full">
+                    <p className="text-sm font-bold text-[#828282]">
+                      بطاقة القوى العاملة
+                    </p>
+                    <div className="w-full flex items-center justify-between pl-6">
+                      <div className="flex items-center justify-between gap-2">
+                        <img src={PDF} alt="certificate" />
+                        <p className="text-sm font-bold text-[#828282]">
+                          {data?.WorkforceCardAttach ? "مرفق.pdf" : "لا يوجد"}
+                        </p>
+                      </div>
+                      {data?.WorkforceCardAttach ? (
+                        <FileViewer 
+                          id={data.WorkforceCardAttach}
+                          customButton={<span className="text-sm font-bold text-[#BE8D4A] cursor-pointer">عرض</span>}
+                        />
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
