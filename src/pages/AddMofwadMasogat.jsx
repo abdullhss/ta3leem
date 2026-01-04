@@ -453,7 +453,7 @@ const AddMofwadMasogat = () => {
               </div>
               
               {/* Show existing personal photo if available */}
-              {data?.PictureAttach && data.PictureAttach !== 0 && (
+              {data?.PictureAttach && data.PictureAttach != 0 ? (
                 <div className="flex items-center gap-2">
                   <FileViewer 
                     id={data.PictureAttach}
@@ -464,7 +464,7 @@ const AddMofwadMasogat = () => {
                     }
                   />
                 </div>
-              )}
+              ) : null}
             </div>
             
             <input
@@ -493,7 +493,7 @@ const AddMofwadMasogat = () => {
                   <FileDisplay file={uploadedFiles.birthCertificate} />
                   
                   {/* Show existing file if available */}
-                  {data?.BirthCertificateAttach && data.BirthCertificateAttach !== 0 && (
+                  {data?.BirthCertificateAttach && data.BirthCertificateAttach != 0 ? (
                     <FileViewer 
                       id={data.BirthCertificateAttach}
                       customButton={
@@ -502,7 +502,7 @@ const AddMofwadMasogat = () => {
                         </span>
                       }
                     />
-                  )}
+                  ) : null}
                 </div>
                 {errors.birthCertificateFileId && (
                   <span className="text-red-500 text-sm mt-1">
@@ -534,7 +534,7 @@ const AddMofwadMasogat = () => {
                   <FileDisplay file={uploadedFiles.healthCard} />
                   
                   {/* Show existing file if available */}
-                  {data?.HealthCardAttach && data.HealthCardAttach !== 0 && (
+                  {data?.HealthCardAttach && data.HealthCardAttach != 0 ? (
                     <FileViewer 
                       id={data.HealthCardAttach}
                       customButton={
@@ -543,7 +543,7 @@ const AddMofwadMasogat = () => {
                         </span>
                       }
                     />
-                  )}
+                  ) : null}
                 </div>
                 {errors.healthCardFileId && (
                   <span className="text-red-500 text-sm mt-1">
@@ -575,7 +575,7 @@ const AddMofwadMasogat = () => {
                   <FileDisplay file={uploadedFiles.criminalRecord} />
                   
                   {/* Show existing file if available */}
-                  {data?.SecurityCardAttach && data.SecurityCardAttach !== 0 && (
+                  {data?.SecurityCardAttach && data.SecurityCardAttach != 0 ? (
                     <FileViewer 
                       id={data.SecurityCardAttach}
                       customButton={
@@ -584,7 +584,7 @@ const AddMofwadMasogat = () => {
                         </span>
                       }
                     />
-                  )}
+                  ) : null}
                 </div>
                 {errors.criminalRecordFileId && (
                   <span className="text-red-500 text-sm mt-1">
@@ -616,7 +616,7 @@ const AddMofwadMasogat = () => {
                   <FileDisplay file={uploadedFiles.laborOffice} />
                   
                   {/* Show existing file if available */}
-                  {data?.WorkOfficeStatementAttach && data.WorkOfficeStatementAttach !== 0 && (
+                  {data?.WorkOfficeStatementAttach && data.WorkOfficeStatementAttach != 0 ? (
                     <FileViewer 
                       id={data.WorkOfficeStatementAttach}
                       customButton={
@@ -625,7 +625,7 @@ const AddMofwadMasogat = () => {
                         </span>
                       }
                     />
-                  )}
+                  ) : null}
                 </div>
                 {errors.laborOfficeFileId && (
                   <span className="text-red-500 text-sm mt-1">
@@ -644,7 +644,7 @@ const AddMofwadMasogat = () => {
 
               {/* Conditionally render إفادة القوى العاملة for non-nationals */}
               {data?.Nationality_Id != 1 ? (
-                <div className="flex flex-col w-full md:col-span-2">
+                <div className="flex flex-col w-full col-span-1">
                   <div className="flex flex-col md:flex-row md:items-center gap-2 w-full">
                     <button
                       type="button"
@@ -658,7 +658,7 @@ const AddMofwadMasogat = () => {
                     <FileDisplay file={uploadedFiles.workforceCard} />
                     
                     {/* Show existing file if available */}
-                    {data?.WorkforceCardAttach && data.WorkforceCardAttach !== 0 && (
+                    {data?.WorkforceCardAttach && data.WorkforceCardAttach != 0 ? (
                       <FileViewer 
                         id={data.WorkforceCardAttach}
                         customButton={
@@ -667,7 +667,7 @@ const AddMofwadMasogat = () => {
                           </span>
                         }
                       />
-                    )}
+                    ) : null}
                   </div>
                   {errors.workforceCardFileId && (
                     <span className="text-red-500 text-sm mt-1">
@@ -691,19 +691,6 @@ const AddMofwadMasogat = () => {
                 />
               )}
             </div>
-
-            {/* Nationality Notice */}
-            {data?.Nationality_Id != 1 && (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg"
-              >
-                <p className="text-blue-700 text-sm font-medium">
-                  ملاحظة: بما أن جنسيتك ليست محلية، يرجى إرفاق <span className="font-bold">إفادة القوى العاملة</span> كمسوغ إضافي مطلوب.
-                </p>
-              </motion.div>
-            )}
           </div>
 
           {/* Form Actions */}
