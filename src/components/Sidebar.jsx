@@ -254,7 +254,7 @@ export default function Sidebar() {
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="p-[20px]">
           <DialogHeader className="flex justify-center">
-            <DialogTitle className="text-xl font-bold">تسجيل الخروج</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-right">تسجيل الخروج</DialogTitle>
           </DialogHeader>
           <ConfirmModal 
             desc="هل أنت متأكد من تسجيل الخروج؟" 

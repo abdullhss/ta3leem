@@ -47,7 +47,7 @@ const SelectTrigger = React.forwardRef(
         )}
         {...props}
       >
-        <span className="flex-1 text-left">{children || displayValue}</span>
+        <span className="flex-1 text-right">{children || displayValue}</span>
         <div className="flex items-center gap-2">
           {showClearButton && displayValue && (
             <button

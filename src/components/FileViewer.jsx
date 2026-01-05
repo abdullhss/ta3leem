@@ -7,7 +7,7 @@ import { message } from 'antd';
 import { base64ToBlob } from '../utils/Base64ToFile.js';
 import PDF from '../assets/PDF.svg';
 
-export default function FileViewer({ id, customButton, SessionID = "" }) {
+export default function FileViewer({ id, customButton, SessionID = "", name = "المرفق" }) {
   const [blobUrl, setBlobUrl] = useState(null);
   const { Modal, openModal, onClose } = useGlobalModal();
   const { ServeAttach } = useServeAttach();
@@ -104,7 +104,7 @@ export default function FileViewer({ id, customButton, SessionID = "" }) {
               <div className={"flex flex-row items-center justify-between gap-x-10 gap-y-2"}>
               <div className="flex gap-2 items-center text-xs">
                 <img src={PDF} alt="PDF" />
-                <span>المرفق.PDF</span>
+                <span>{name}.PDF</span>
               </div>
                   <Button 
                     type="button"
