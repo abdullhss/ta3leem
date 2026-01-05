@@ -1,4 +1,4 @@
-import { ChevronRight, Paperclip, X, Upload } from 'lucide-react'
+import { ChevronRight, Paperclip, X, Upload, Eye } from 'lucide-react'
 import React, { useRef, useState, useMemo, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -287,28 +287,46 @@ const AddMofwadMasogat = () => {
     }
   }
 
-  const FileDisplay = ({ file }) => {
-    if (!file) return null
+  const FileDisplay = ({ file, fileId }) => {
+    if (!file && !fileId) return null
     
     return (
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="mt-2 md:mt-0 border border-green-500 rounded-lg py-1.5 px-3 md:px-6 flex items-center justify-between bg-green-50 w-full md:w-auto"
+        className="mt-2 md:mt-0 border border-green-500 rounded-lg py-1.5 px-3 md:px-6 flex items-center justify-between bg-green-50 w-full md:w-auto gap-2"
       >
         <div className="flex items-center gap-2">
           <Paperclip size={16} className="text-green-600 flex-shrink-0" />
           <span className="text-sm text-green-700 font-medium truncate max-w-[120px] md:max-w-[200px]">
-            {file.name}
+            {file?.name || 'مرفق موجود'}
           </span>
         </div>
-        <button
-          type="button"
-          onClick={() => removeFile(file.type)}
-          className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 flex-shrink-0"
-        >
-          <X size={18} />
-        </button>
+        <div className="flex items-center gap-2">
+          {fileId && fileId !== 0 && (
+            <FileViewer 
+              id={fileId}
+              customButton={
+                <button
+                  type="button"
+                  className="text-[#BE8D4A] hover:text-[#a67a3f] p-1 rounded flex items-center gap-1 text-sm font-semibold"
+                >
+                  <Eye size={16} />
+                  عرض
+                </button>
+              }
+            />
+          )}
+          {file && (
+            <button
+              type="button"
+              onClick={() => removeFile(file.type)}
+              className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 flex-shrink-0"
+            >
+              <X size={18} />
+            </button>
+          )}
+        </div>
       </motion.div>
     )
   }
@@ -452,15 +470,19 @@ const AddMofwadMasogat = () => {
                 />
               </div>
               
-              {/* Show existing personal photo if available */}
-              {data?.PictureAttach && data.PictureAttach != 0 ? (
+              {/* Show existing personal photo viewer if available */}
+              {data?.PictureAttach && data.PictureAttach != 0 && !personalPhotoPreview ? (
                 <div className="flex items-center gap-2">
                   <FileViewer 
                     id={data.PictureAttach}
                     customButton={
-                      <span className="text-sm font-bold text-[#BE8D4A] cursor-pointer hover:underline">
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 bg-[#BE8D4A] text-white px-4 py-2 rounded hover:bg-[#a67a3f] transition-colors"
+                      >
+                        <Eye size={16} />
                         عرض الصورة الحالية
-                      </span>
+                      </button>
                     }
                   />
                 </div>
@@ -490,19 +512,10 @@ const AddMofwadMasogat = () => {
                     شهادة ميلاد
                   </button>
                   
-                  <FileDisplay file={uploadedFiles.birthCertificate} />
-                  
-                  {/* Show existing file if available */}
-                  {data?.BirthCertificateAttach && data.BirthCertificateAttach != 0 ? (
-                    <FileViewer 
-                      id={data.BirthCertificateAttach}
-                      customButton={
-                        <span className="text-sm font-bold text-[#BE8D4A] cursor-pointer hover:underline">
-                          عرض الملف الحالي
-                        </span>
-                      }
-                    />
-                  ) : null}
+                  <FileDisplay 
+                    file={uploadedFiles.birthCertificate} 
+                    fileId={data?.BirthCertificateAttach && data.BirthCertificateAttach != 0 ? data.BirthCertificateAttach : null}
+                  />
                 </div>
                 {errors.birthCertificateFileId && (
                   <span className="text-red-500 text-sm mt-1">
@@ -531,19 +544,10 @@ const AddMofwadMasogat = () => {
                     البطاقة الصحية
                   </button>
                   
-                  <FileDisplay file={uploadedFiles.healthCard} />
-                  
-                  {/* Show existing file if available */}
-                  {data?.HealthCardAttach && data.HealthCardAttach != 0 ? (
-                    <FileViewer 
-                      id={data.HealthCardAttach}
-                      customButton={
-                        <span className="text-sm font-bold text-[#BE8D4A] cursor-pointer hover:underline">
-                          عرض الملف الحالي
-                        </span>
-                      }
-                    />
-                  ) : null}
+                  <FileDisplay 
+                    file={uploadedFiles.healthCard} 
+                    fileId={data?.HealthCardAttach && data.HealthCardAttach != 0 ? data.HealthCardAttach : null}
+                  />
                 </div>
                 {errors.healthCardFileId && (
                   <span className="text-red-500 text-sm mt-1">
@@ -572,19 +576,10 @@ const AddMofwadMasogat = () => {
                     الخلو من السوابق الجنائية
                   </button>
                   
-                  <FileDisplay file={uploadedFiles.criminalRecord} />
-                  
-                  {/* Show existing file if available */}
-                  {data?.SecurityCardAttach && data.SecurityCardAttach != 0 ? (
-                    <FileViewer 
-                      id={data.SecurityCardAttach}
-                      customButton={
-                        <span className="text-sm font-bold text-[#BE8D4A] cursor-pointer hover:underline">
-                          عرض الملف الحالي
-                        </span>
-                      }
-                    />
-                  ) : null}
+                  <FileDisplay 
+                    file={uploadedFiles.criminalRecord} 
+                    fileId={data?.SecurityCardAttach && data.SecurityCardAttach != 0 ? data.SecurityCardAttach : null}
+                  />
                 </div>
                 {errors.criminalRecordFileId && (
                   <span className="text-red-500 text-sm mt-1">
@@ -613,19 +608,10 @@ const AddMofwadMasogat = () => {
                     إفادة من مكتب العمل
                   </button>
                   
-                  <FileDisplay file={uploadedFiles.laborOffice} />
-                  
-                  {/* Show existing file if available */}
-                  {data?.WorkOfficeStatementAttach && data.WorkOfficeStatementAttach != 0 ? (
-                    <FileViewer 
-                      id={data.WorkOfficeStatementAttach}
-                      customButton={
-                        <span className="text-sm font-bold text-[#BE8D4A] cursor-pointer hover:underline">
-                          عرض الملف الحالي
-                        </span>
-                      }
-                    />
-                  ) : null}
+                  <FileDisplay 
+                    file={uploadedFiles.laborOffice} 
+                    fileId={data?.WorkOfficeStatementAttach && data.WorkOfficeStatementAttach != 0 ? data.WorkOfficeStatementAttach : null}
+                  />
                 </div>
                 {errors.laborOfficeFileId && (
                   <span className="text-red-500 text-sm mt-1">
@@ -655,19 +641,10 @@ const AddMofwadMasogat = () => {
                       إفادة القوى العاملة
                     </button>
                     
-                    <FileDisplay file={uploadedFiles.workforceCard} />
-                    
-                    {/* Show existing file if available */}
-                    {data?.WorkforceCardAttach && data.WorkforceCardAttach != 0 ? (
-                      <FileViewer 
-                        id={data.WorkforceCardAttach}
-                        customButton={
-                          <span className="text-sm font-bold text-[#BE8D4A] cursor-pointer hover:underline">
-                            عرض الملف الحالي
-                          </span>
-                        }
-                      />
-                    ) : null}
+                    <FileDisplay 
+                      file={uploadedFiles.workforceCard} 
+                      fileId={data?.WorkforceCardAttach && data.WorkforceCardAttach != 0 ? data.WorkforceCardAttach : null}
+                    />
                   </div>
                   {errors.workforceCardFileId && (
                     <span className="text-red-500 text-sm mt-1">

@@ -13,7 +13,7 @@ import RenewalRequests from "./pages/RenewalRequests.jsx"
 import VisitRequest from "./pages/VisitRequest.jsx"
 import Uploads from "./pages/Uploads.jsx"
 import Notifications from "./pages/Notifications.jsx"
-import Managers from "./pages/Managers.jsx"
+import Mangers from "./pages/Mangers.jsx"
 import AccountInfo from "./pages/AccountInfo.jsx"
 import { Navigate, Route, Routes } from 'react-router-dom'
 import AddManger from './components/CreateSchool/Add Manger/AddManger.jsx'
@@ -43,7 +43,7 @@ function App() {
         <Route path="/requests/visit" element={<VisitRequest />} />
         <Route path="/uploads" element={<Uploads />} />
         <Route path="/notifications" element={<Notifications />} />
-        <Route path="/managers" element={<Managers />} />
+        <Route path="/mangers" element={<Mangers />} />
         <Route path="/account-info" element={<AccountInfo />} />
         <Route path="/add-mofwad-masogat" element={<AddMofwadMasogat />} />
       </Route>
