@@ -61,7 +61,7 @@ const menuItems = [
       { title: 'طلب زيارة', path: '/requests/visit' }
     ]
   },
-  { title: 'رفع المسوغات', path: '/uploads' },
+  // { title: 'رفع المسوغات', path: '/uploads' },
   { title: 'الإشعارات', path: '/notifications' },
   { title: 'المدراء', path: '/mangers' },
   { title: 'معلومات حساب المفوض', path: '/account-info' }
