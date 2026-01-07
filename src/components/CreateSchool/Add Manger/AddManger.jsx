@@ -68,7 +68,7 @@ const AddManager = () => {
   })
 
   // Fetch schools on component mount
-  const {schools, loading: schoolsLoading, error: schoolsError} = useSchools();
+  // const {schools, loading: schoolsLoading, error: schoolsError} = useSchools();
   
   // Fetch single manager data if in edit or delete mode
   const deleteModeManagerId = isDeleteMode && managerData ? (managerData.id || managerData.Id) : null
@@ -86,7 +86,7 @@ const AddManager = () => {
       setValue('motherName', SingleManger.MotherName || '')
       setValue('nationalId', SingleManger.NationalNum || '')
       setValue('username', SingleManger.LoginName || '')
-      setValue('schoolId', SingleManger.School_Id?.toString() || '')
+      // setValue('schoolId', SingleManger.School_Id?.toString() || '')
       
       // Set file IDs (for existing files) - only set if file ID exists and is not 0
       // These will be used by FileDisplay to show view buttons
@@ -296,9 +296,9 @@ const AddManager = () => {
     const formData = {
       ...data,
       attachments: uploadedFiles,
-      schoolName: data.schoolId 
-        ? schools.find(s => s.id.toString() === data.schoolId)?.School_FullName 
-        : null,
+      // schoolName: data.schoolId 
+      //   ? schools.find(s => s.id.toString() === data.schoolId)?.School_FullName 
+      //   : null,
     }
     
     console.log("Manager Form Data Submitted:", formData)
@@ -313,7 +313,7 @@ const AddManager = () => {
     try {
       const response = await DoTransaction(
         "wbMXck1ImGtMJHBzukySHA==",
-        `${isEditMode ? managerId : 0}#${data.fullName}#${data.motherName}#${data.email}#${data.nationalId}#${data.schoolId}#${data.username}#${passwordToUse}#${data.nationalIdFileId}#${data.eduQualificationFileId}#${data.healthCertificateFileId}#${data.criminalRecordFileId}#${data.profileImageFileId || 0}`,
+        `${isEditMode ? managerId : 0}#${data.fullName}#${data.motherName}#${data.email}#${data.nationalId}##${data.username}#${passwordToUse}#${data.nationalIdFileId}#${data.eduQualificationFileId}#${data.healthCertificateFileId}#${data.criminalRecordFileId}#${data.profileImageFileId || 0}`,
         action, // wanted action 0 add , 1 edit , 2 delete
         "Id#FullName#MotherName#Email#NationalNum#School_Id#LoginName#Password#NationalNumAttach#EductionAttach#HealthCardAttach#SecurityCardAttach#PictureAttach#User_Id"
       )
@@ -561,7 +561,7 @@ const AddManager = () => {
           </div>
 
           {/* المدرسة */}
-          <div className="flex flex-col">
+          {/* <div className="flex flex-col">
             <label className="mb-1 font-semibold flex items-center gap-2">
               المدرسة
             </label>
@@ -579,7 +579,7 @@ const AddManager = () => {
             {errors.schoolId && (
               <span className="text-red-500 text-sm mt-1">{errors.schoolId.message}</span>
             )}
-          </div>
+          </div> */}
 
           {/* كلمة المرور */}
           <div className="flex flex-col">
@@ -803,7 +803,7 @@ const AddManager = () => {
               type="submit"
               onClick={handleSubmit(onSubmit)}
               className="bg-[#BE8D4A] text-white px-6 py-3 rounded font-semibold hover:bg-[#a67a3f] transition-colors w-full md:w-auto"
-              disabled={managerLoading}
+              disabled={!managerLoading}
             >
               {isEditMode ? 'تعديل المدير' : 'حفظ المدير'}
             </Button>

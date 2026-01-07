@@ -13,19 +13,65 @@ import { SelectItem } from '../ui/select';
 import { SelectTrigger } from '../ui/select';
 import { SelectValue } from '../ui/select';
 import FileViewer from '../components/FileViewer';
+import { toast } from 'react-toastify';
+import { DoTransaction } from '../services/apiServices';
 
 const School = () => {
   const { type, id, Office_id } = useParams();
   console.log(id, Office_id);
   const { SingleSchool, loading, error } = useSingleSchool(id, Office_id);  
   console.log(SingleSchool);
-  const {Managers, totalCount, loading: mangersLoading, error: mangersError} = useMangers(0, "", 1, 10000);
+  const {Managers, totalCount, loading: mangersLoading, error: mangersError} = useMangers(1, "", 1, 10000);
   console.log(Managers);
 
   const [openAddMangerModal, setOpenAddMangerModal] = useState(false);
   const navigate = useNavigate();
-  const [selectedManagerId, setSelectedManagerId] = useState(0);
+  const [selectedManagerId, setSelectedManagerId] = useState("");
   const [openMapModal, setOpenMapModal] = useState(false);
+  
+  const handleOpenAddManager = (statusId)=>{
+    
+    if(statusId == 2){
+      toast.error("لا يمكن إضافة مدير مدرسة حاليا");
+    }else{
+      setOpenAddMangerModal(true)
+    }
+  }
+
+  const handleAddFiles = (statusId)=>{
+    if(statusId == 2){
+      toast.error("لا يمكن إضافة مسوغات المدرسة حاليا");
+    }else{
+      setOpenAddMangerModal(true)
+    }
+  }
+
+  const handleAssignManger = async (mangerId , schoolId)=>{
+    console.log(mangerId , schoolId);
+    const response = await DoTransaction(
+      "dsaK2RNVIQXmf0/QbiS0Hg==" , 
+      `${schoolId}#${mangerId}` ,
+      1 , 
+      "Id#SchoolManager_Id"
+    )
+    const response2 = await DoTransaction(
+      "wbMXck1ImGtMJHBzukySHA==" , 
+      `${mangerId}#${schoolId}` ,
+      1 , 
+      "Id#School_Id"
+    )
+    
+
+    console.log(response);
+    console.log(response2);
+    if(response.success != 200 || response2.success != 200){
+      toast.error(response.errorMessage || "فشل تعيين المدير");
+    }else{
+      toast.success("تم تعيين المدير بنجاح");
+      setOpenAddMangerModal(false);
+      navigate(-1);
+    }
+  }
   
   return (
     <div className='flex flex-col gap-4 md:gap-6 p-3 md:p-4 lg:p-6'>
@@ -79,17 +125,17 @@ const School = () => {
             <span className='text-xs md:text-sm font-bold text-[#828282]'>مدير المدرسة</span>
             {
               SingleSchool?.managerSchool ? (
-                <span className='text-sm md:text-base font-bold'>{SingleSchool?.managerSchool?.FullName}</span>
+                <span className='text-sm md:text-base font-bold'>{SingleSchool?.managerSchool[0]?.FullName}</span>
               ) : (
                 <div className='flex flex-col sm:flex-row items-start sm:items-center gap-2'>
                   <button 
                     className='bg-[#BE8D4A] text-white rounded-md p-1 md:p-0.5 gap-2 w-8 h-8 md:w-auto md:h-auto flex items-center justify-center'
-                    onClick={() => setOpenAddMangerModal(true)}
+                    onClick={() => {handleOpenAddManager(SingleSchool.mainSchool.SchoolStatus_Id)}}
                   >
                     <PlusIcon className='w-4 h-4' />
                   </button>
                   <span 
-                    onClick={() => setOpenAddMangerModal(true)}
+                    onClick={() => {handleOpenAddManager(SingleSchool.mainSchool.SchoolStatus_Id)}}
                     className='text-sm md:text-base font-bold cursor-pointer block sm:inline'
                   >
                     إضافة مدير مدرسة
@@ -101,10 +147,10 @@ const School = () => {
           <div className='flex flex-col justify-between gap-2 md:gap-4 w-full sm:w-1/2 lg:w-full xl:w-1/2'>
             <span className='text-xs md:text-sm font-bold text-[#828282] md:text-left'>المسوغات</span>
             <div className='flex flex-col sm:flex-row items-start sm:items-center gap-2 md:justify-end'>
-              <button className='bg-[#BE8D4A] text-white rounded-md p-1 md:p-0.5 gap-2 w-8 h-8 md:w-auto md:h-auto flex items-center justify-center'>
+              <button onClick={()=>{handleAddFiles(SingleSchool.mainSchool.SchoolStatus_Id)}} className='bg-[#BE8D4A] text-white rounded-md p-1 md:p-0.5 gap-2 w-8 h-8 md:w-auto md:h-auto flex items-center justify-center'>
                 <PlusIcon className='w-4 h-4' />
               </button>
-              <span className='text-sm md:text-base font-bold cursor-pointer block sm:inline'>إضافة مسوغات</span>
+              <span onClick={()=>{handleAddFiles(SingleSchool.mainSchool.SchoolStatus_Id)}} className='text-sm md:text-base font-bold cursor-pointer block sm:inline'>إضافة مسوغات</span>
             </div>
           </div>
         </div>
@@ -190,18 +236,26 @@ const School = () => {
           <div className='flex flex-col md:flex-row items-end gap-4 md:gap-6 w-full mt-4'>
             <div className='flex flex-col gap-2 md:gap-4 w-full md:w-2/3'>
               <span className='text-sm md:text-base'>مدير مدرسة غير مكلف</span>
-              <Select value={selectedManagerId} onValueChange={(value) => setSelectedManagerId(value)}>
+              <Select 
+                value={selectedManagerId} 
+                onValueChange={(value) => {
+                  setSelectedManagerId(value);
+                }}
+              >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder='برجاء إختيار مدير مدرسة غير مكلف' className='text-sm md:text-base font-bold' />
+                  {selectedManagerId && selectedManagerId !== "" && Managers.find(m => m.id.toString() === selectedManagerId.toString())
+                    ? Managers.find(m => m.id.toString() === selectedManagerId.toString()).FullName
+                    : <SelectValue placeholder='برجاء إختيار مدير مدرسة غير مكلف' className='text-sm md:text-base font-bold' />
+                  }
                 </SelectTrigger>
                 <SelectContent>
                   {
                     Managers.length === 0 && (
-                      <SelectItem key={0} value={0}>لا يوجد مدراء مدارس غير مكلفين</SelectItem>
+                      <SelectItem key={0} value="0">لا يوجد مدراء مدارس غير مكلفين</SelectItem>
                     )
                   }
                   {Managers.map((manager) => (
-                    <SelectItem key={manager.Id} value={manager.Id}>{manager.FullName}</SelectItem>
+                    <SelectItem key={manager.id} value={manager.id.toString()}>{manager.FullName}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -228,7 +282,7 @@ const School = () => {
             >
               الغاء
             </Button>
-            <Button className='bg-[#BE8D4A] text-white rounded-md p-2 md:p-0.5 gap-2 w-full sm:w-auto px-6 md:px-12'>
+            <Button onClick={()=>{handleAssignManger(selectedManagerId, id)}} className='bg-[#BE8D4A] text-white rounded-md p-2 md:p-0.5 gap-2 w-full sm:w-auto px-6 md:px-12'>
               اضافة
             </Button>
           </DialogFooter>

@@ -320,7 +320,7 @@ const CreatSchoolForm = ({schoolType , setSchoolType, schoolData = null, action 
     
     const response = await DoTransaction(
       "dsaK2RNVIQXmf0/QbiS0Hg==",
-      `${schoolId}#${data.schoolName}#${userData.Id}#${data.latitude}#${data.longitude}#${selectedBaladiaId}#${data.office}#${data.siteImagesFileId || 0}#${data.neighborsApprovalFileId || 0}#${schoolType}#0#${schoolType=="New"?4:1}###0##0#0#0##0`,
+      `${schoolId}#${data.schoolName}#${userData.Id}#${data.latitude}#${data.longitude}#${selectedBaladiaId}#${data.office}#${data.siteImagesFileId || 0}#${data.neighborsApprovalFileId || 0}#${schoolType}#0#${schoolType=="New"?4:2}###0##0#0#0##0`,
       wantedAction, // wanted action 0 add , 1 edit , 2 delete
       "Id#FullName#Mofwad_Id#latitude#longitude#Baldia_Id#Office_Id#LocationPictureAttach#neighborsApproveAttach#NewOrExist#SchoolManager_Id#SchoolStatus_Id#UniqueId#EducationLevel_Ids#SchoolGenderType_Id#EducationClass_Ids#EducationPeriod_Id#BuildingType_Id#BuildingAllowance_Id#Labor_Ids#BuildingOwnAttach"
     )

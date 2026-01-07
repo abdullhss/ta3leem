@@ -68,9 +68,11 @@ const SelectTrigger = React.forwardRef(
 );
 SelectTrigger.displayName = "SelectTrigger";
 
-const SelectValue = ({ placeholder, ...props }) => {
+const SelectValue = ({ placeholder, children, ...props }) => {
   const context = React.useContext(SelectContext);
-  return <span {...props}>{context?.selectedValue || placeholder}</span>;
+  // If children are provided, use them (for custom display), otherwise use selectedValue
+  const displayText = children !== undefined && children !== null ? children : (context?.selectedValue || placeholder);
+  return <span {...props}>{displayText}</span>;
 };
 
 const SelectContent = React.forwardRef(
@@ -116,12 +118,19 @@ const SelectContent = React.forwardRef(
 
     if (!context?.open) return null;
 
+    const handleBackdropClick = (e) => {
+      // Only close if clicking directly on the backdrop, not on the content
+      if (e.target === e.currentTarget) {
+        context.setOpen(false);
+      }
+    };
+
     const content = (
       <>
         <div
           className="fixed inset-0"
-          style={{ zIndex: 9998 }}
-          onClick={() => context.setOpen(false)}
+          style={{ zIndex: 9998, pointerEvents: 'auto' }}
+          onClick={handleBackdropClick}
         />
         <div
           ref={(node) => {
@@ -129,6 +138,8 @@ const SelectContent = React.forwardRef(
             if (typeof ref === 'function') ref(node);
             else if (ref) ref.current = node;
           }}
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
           className={cn(
             "fixed min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-white text-foreground shadow-lg",
             className
@@ -140,6 +151,7 @@ const SelectContent = React.forwardRef(
             width: `${position.width}px`,
             maxHeight: `${position.maxHeight}px`,
             maxWidth: 'calc(100vw - 2rem)',
+            pointerEvents: 'auto',
           }}
           {...props}
         >
@@ -155,13 +167,26 @@ const SelectContent = React.forwardRef(
 SelectContent.displayName = "SelectContent";
 
 const SelectItem = React.forwardRef(
-  ({ className, children, value, ...props }, ref) => {
+  ({ className, children, value, onClick, ...props }, ref) => {
     const context = React.useContext(SelectContext);
+
+    const handleClick = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (context?.handleValueChange) {
+        context.handleValueChange(value);
+      }
+      // Call any custom onClick handler if provided
+      onClick?.(e);
+    };
 
     return (
       <div
         ref={ref}
-        onClick={() => context?.handleValueChange(value)}
+        onClick={handleClick}
+        onMouseDown={(e) => {
+          e.stopPropagation();
+        }}
         className={cn(
           "relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 px-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
           className

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { executeProcedure } from "../../services/apiServices";
 
 // -1 all
-// 0 Not linked
+// 1 Not linked
 const useMangers = (isAvailable = -1, searchText = "" , startNumber = 1 , count = 10) => {
   const [Managers, setManagers] = useState([]);
   const [loading, setLoading] = useState(true);
