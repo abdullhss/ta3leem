@@ -41,7 +41,7 @@ function App() {
         <Route path="/requests/other" element={<OtherRequests />} />
         <Route path="/requests/renewal" element={<RenewalRequests />} />
         <Route path="/requests/visit" element={<VisitRequest />} />
-        <Route path="/uploads/:id/:Office_id" element={<Uploads />} />
+        <Route path="/uploads/:id/:Office_id/:type" element={<Uploads />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/mangers" element={<Mangers />} />
         <Route path="/account-info" element={<AccountInfo />} />

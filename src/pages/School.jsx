@@ -42,7 +42,7 @@ const School = () => {
     if(statusId == 2){
       toast.error("لا يمكن إضافة مسوغات المدرسة حاليا");
     }else{
-      setOpenAddMangerModal(true)
+      navigate(`/uploads/${SingleSchool.mainSchool.id}/${SingleSchool.mainSchool.Office_Id}/add`)
     }
   }
 
@@ -100,7 +100,10 @@ const School = () => {
         {/* Left Card - المندوب */}
         <div className='bg-white rounded-lg p-3 md:p-4 lg:p-6 flex flex-col sm:flex-row lg:flex-col xl:flex-row justify-between gap-4 w-full lg:w-1/2'>
           <div className='flex flex-col justify-between gap-2 md:gap-4 w-full sm:w-1/2 lg:w-full xl:w-1/2'>
-            <span className='text-xs md:text-sm font-bold text-[#828282]'>اسم المفوض</span>
+            <div className='flex items-center gap-4'>
+              <span className='text-xs md:text-sm font-bold text-[#828282]'>اسم المفوض</span>
+              <span className='text-sm md:text-base font-bold text-[#BE8D4A] underline cursor-pointer' onClick={()=>{navigate(`/account-info}`)}}>عرض</span>
+            </div>
             <span className='text-sm md:text-base font-bold'>{SingleSchool?.mofwad?.FullName}</span>  
           </div>
           <div className='flex flex-col justify-between gap-2 md:gap-4 w-full sm:w-1/2 lg:w-full xl:w-1/2'>
@@ -122,7 +125,27 @@ const School = () => {
         {/* Right Card - School Manager */}
         <div className='bg-white rounded-lg p-3 md:p-4 lg:p-6 flex flex-col sm:flex-row lg:flex-col xl:flex-row justify-between gap-4 w-full lg:w-1/2'>
           <div className='flex flex-col justify-between gap-2 md:gap-4 w-full sm:w-1/2 lg:w-full xl:w-1/2'>
-            <span className='text-xs md:text-sm font-bold text-[#828282]'>مدير المدرسة</span>
+            <div className='flex items-center gap-4'>
+              <span className='text-xs md:text-sm font-bold text-[#828282]'>مدير المدرسة</span>
+              {
+                SingleSchool?.managerSchool?.[0]?.id && (
+                  <span
+                    className="text-sm md:text-base font-bold text-[#BE8D4A] underline cursor-pointer"
+                    onClick={() => {
+                      navigate("/requests/add-manger", {
+                        state: {
+                          action: 1,
+                          managerId: SingleSchool.managerSchool[0].id,
+                          type: "viewonly",
+                        },
+                      });
+                    }}
+                  >
+                    عرض
+                  </span>
+                )
+              }
+            </div>
             {
               SingleSchool?.managerSchool ? (
                 <span className='text-sm md:text-base font-bold'>{SingleSchool?.managerSchool[0]?.FullName}</span>
@@ -146,12 +169,20 @@ const School = () => {
           </div>
           <div className='flex flex-col justify-between gap-2 md:gap-4 w-full sm:w-1/2 lg:w-full xl:w-1/2'>
             <span className='text-xs md:text-sm font-bold text-[#828282] md:text-left'>المسوغات</span>
-            <div className='flex flex-col sm:flex-row items-start sm:items-center gap-2 md:justify-end'>
-              <button onClick={()=>{handleAddFiles(SingleSchool.mainSchool.SchoolStatus_Id)}} className='bg-[#BE8D4A] text-white rounded-md p-1 md:p-0.5 gap-2 w-8 h-8 md:w-auto md:h-auto flex items-center justify-center'>
-                <PlusIcon className='w-4 h-4' />
-              </button>
-              <span onClick={()=>{handleAddFiles(SingleSchool.mainSchool.SchoolStatus_Id)}} className='text-sm md:text-base font-bold cursor-pointer block sm:inline'>إضافة مسوغات</span>
-            </div>
+            {
+              SingleSchool?.attachments[0] ? (
+                <span onClick={()=>{navigate(`/uploads/${SingleSchool.mainSchool.id}/${SingleSchool.mainSchool.Office_Id}/viewonly`)}} className='text-sm md:text-left md:text-base font-bold text-[#BE8D4A] underline cursor-pointer'>
+                  عرض
+                </span>
+              ) : (
+                <div className='flex flex-col sm:flex-row items-start sm:items-center gap-2 md:justify-end'>
+                  <button onClick={()=>{handleAddFiles(SingleSchool.mainSchool.SchoolStatus_Id)}} className='bg-[#BE8D4A] text-white rounded-md p-1 md:p-0.5 gap-2 w-8 h-8 md:w-auto md:h-auto flex items-center justify-center'>
+                    <PlusIcon className='w-4 h-4' />
+                  </button>
+                  <span onClick={()=>{handleAddFiles(SingleSchool.mainSchool.SchoolStatus_Id)}} className='text-sm md:text-base font-bold cursor-pointer block sm:inline'>إضافة مسوغات</span>
+                </div>
+              )
+            }
           </div>
         </div>
       </div>

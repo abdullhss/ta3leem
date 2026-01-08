@@ -12,7 +12,7 @@ import { DoTransaction } from "../services/apiServices";
 export default function Uploads() {
   const [selectedUploadType, setSelectedUploadType] = useState("Building");
   const [commitmentChecked, setCommitmentChecked] = useState(false);
-  const { id, Office_id } = useParams();
+  const { id, Office_id , type} = useParams();
   const { SingleSchool, loading, error } = useSingleSchool(id, Office_id);
   const { uploadSingleFile } = useUploadFiles();
   const userData = useSelector((state) => state.auth.userData);
@@ -127,6 +127,65 @@ export default function Uploads() {
       validateExpiryDate();
     }
   }, [licenseForm.expiryDate, licenseForm.issueDate]);
+
+  // Load existing attachments and form data
+  useEffect(() => {
+    if (SingleSchool?.attachments && SingleSchool.attachments.length > 0) {
+      const attachment = SingleSchool.attachments[0];
+      
+      // Populate building files with file IDs
+      setBuildingFiles({
+        propertyDeed: attachment.SanadMelkiaAttach ? { id: attachment.SanadMelkiaAttach } : null,
+        schoolSketch: attachment.KorokiDrawAttach ? { id: attachment.KorokiDrawAttach } : null,
+        aerialMap: attachment.AirMapAttach ? { id: attachment.AirMapAttach } : null,
+      });
+      
+      // Populate general files with file IDs
+      setGeneralFiles({
+        establishmentContract: attachment.CreateContractAttach ? { id: attachment.CreateContractAttach } : null,
+        commercialRegistry: attachment.CommercialRegisterAttach ? { id: attachment.CommercialRegisterAttach } : null,
+        chamberOfCommerce: attachment.ChamberCommerceAttach ? { id: attachment.ChamberCommerceAttach } : null,
+        managerSelection: attachment.ChooseManagerAttach ? { id: attachment.ChooseManagerAttach } : null,
+        criminalRecord: attachment.SecurityCardAttach ? { id: attachment.SecurityCardAttach } : null,
+        license: attachment.LicenseAttach ? { id: attachment.LicenseAttach } : null,
+        practicePermit: attachment.MozawlaAttach ? { id: attachment.MozawlaAttach } : null,
+      });
+
+      // Populate license form
+      if (attachment.LicenseNum || attachment.LicensePlace || attachment.LicenseStartDate) {
+        const formatDate = (dateString) => {
+          if (!dateString) return "";
+          // Handle ISO date format "2026-01-08T00:00:00" -> "2026-01-08"
+          if (dateString.includes("T")) {
+            return dateString.split("T")[0];
+          }
+          // Handle "DD/MM/YYYY" format -> "YYYY-MM-DD"
+          if (dateString.includes("/")) {
+            const parts = dateString.split("/");
+            if (parts.length === 3) {
+              return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+          }
+          return dateString;
+        };
+
+        setLicenseForm({
+          licenseNumber: attachment.LicenseNum || "",
+          issuePlace: attachment.LicensePlace || "",
+          issueDate: formatDate(attachment.LicenseStartDate) || "",
+          expiryDate: formatDate(attachment.LicenseEndDate) || "",
+          practicePermitNumber: attachment.ChamberCommerceNum || "",
+          practicePermitEndDate: formatDate(attachment.ChamberCommerceEndDate) || "",
+          validity: attachment.ChamberCommerceStatus || "",
+        });
+      }
+
+      // Set commitment checkbox
+      if (attachment.commitment !== undefined) {
+        setCommitmentChecked(attachment.commitment);
+      }
+    }
+  }, [SingleSchool?.attachments]);
 
   const handleFileUpload = async (file, type, fileType) => {
     if (!file) return;
@@ -353,7 +412,7 @@ export default function Uploads() {
       LicenseStartDate: licenseForm.issueDate.split("-").reverse().join("/"),
       LicenseEndDate: licenseForm.expiryDate.split("-").reverse().join("/"),
       SecurityCardAttach: generalFiles.criminalRecord.id,
-      MozawlaAttach: generalFiles.practicePermit.id, // Assuming commitmentChecked is a boolean
+      MozawlaAttach: generalFiles.practicePermit.id,
       ChamberCommerceNum: licenseForm.practicePermitNumber, // Assuming this is a field in the form
       ChamberCommerceEndDate: licenseForm.practicePermitEndDate.split("-").reverse().join("/"), // Assuming this is a field in the form
     };
@@ -369,11 +428,12 @@ export default function Uploads() {
       toast.error(response.errorMessage || "فشل العملية")
     } else {
       toast.success("تم حفظ البيانات بنجاح")
+      navigate(-1);
     }
     
   };
 
-  const FileDisplay = ({ file, fileId, onRemove }) => {
+  const FileDisplay = ({ file, fileId, onRemove, disabled = false }) => {
     if (!file && !fileId) return null;
 
     return (
@@ -400,7 +460,7 @@ export default function Uploads() {
               }
             />
           )}
-          {file && (
+          {file && !disabled && (
             <button
               type="button"
               onClick={onRemove}
@@ -414,7 +474,7 @@ export default function Uploads() {
     );
   };
 
-  const FileUploader = forwardRef(({ label, file, fileId, onUpload, onRemove, accept = ".pdf,.jpg,.jpeg,.png", error = false }, ref) => {
+  const FileUploader = forwardRef(({ label, file, fileId, onUpload, onRemove, accept = ".pdf,.jpg,.jpeg,.png", error = false, disabled = false }, ref) => {
     return (
       <div className="flex flex-col w-full gap-2">
         {/* Label for the button */}
@@ -424,9 +484,12 @@ export default function Uploads() {
         <div className="flex flex-col md:flex-row md:items-center gap-2 w-full">
           <button
             type="button"
-            onClick={() => ref.current?.click()}
+            onClick={() => !disabled && ref.current?.click()}
+            disabled={disabled}
             className={`flex items-center gap-2 px-4 py-2 rounded w-full md:w-1/2 transition-colors ${
-              error 
+              disabled
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : error 
                 ? "bg-red-100 border border-red-500 text-red-600 hover:bg-red-200" 
                 : "bg-[#BE8D4A] text-white hover:bg-[#a67a3f]"
             }`}
@@ -434,7 +497,7 @@ export default function Uploads() {
             <Paperclip />
             رفع الملف
           </button>
-          <FileDisplay file={file} fileId={fileId} onRemove={onRemove} />
+          <FileDisplay file={file} fileId={fileId} onRemove={onRemove} disabled={disabled} />
         </div>
         {error && !file && !fileId && (
           <p className="text-red-500 text-sm mt-1">هذا الحقل مطلوب</p>
@@ -445,6 +508,7 @@ export default function Uploads() {
           ref={ref}
           onChange={(e) => onUpload(e.target.files[0])}
           accept={accept}
+          disabled={disabled}
         />
       </div>
     );
@@ -481,7 +545,7 @@ export default function Uploads() {
 
         <div className="flex flex-col gap-2">
           <span className="text-sm text-[#828282] md:text-left">مدير المدرسة</span>
-          <span className="text-lg">{SingleSchool?.managerSchool[0]?.FullName}</span>
+          <span className="text-lg">{SingleSchool?.managerSchool?.[0]?.FullName}</span>
         </div>
       </div>
 
@@ -497,30 +561,33 @@ export default function Uploads() {
               label="سند الملكية / عقد ايجار"
               ref={propertyDeedRef}
               file={buildingFiles.propertyDeed}
-              fileId={null}
+              fileId={buildingFiles.propertyDeed?.id}
               onUpload={(file) => handleFileUpload(file, "propertyDeed", "Building")}
               onRemove={() => removeFile("propertyDeed", "Building")}
               error={formErrors.buildingFiles.propertyDeed}
+              disabled={type === "viewonly"}
             />
 
             <FileUploader
               label="الرسم الكروكي للمدرسة"
               ref={schoolSketchRef}
               file={buildingFiles.schoolSketch}
-              fileId={null}
+              fileId={buildingFiles.schoolSketch?.id}
               onUpload={(file) => handleFileUpload(file, "schoolSketch", "Building")}
               onRemove={() => removeFile("schoolSketch", "Building")}
               error={formErrors.buildingFiles.schoolSketch}
+              disabled={type === "viewonly"}
             />
 
             <FileUploader
               label="الخريطة الجوية واضحة المعالم للمبني المدرسي"
               ref={aerialMapRef}
               file={buildingFiles.aerialMap}
-              fileId={null}
+              fileId={buildingFiles.aerialMap?.id}
               onUpload={(file) => handleFileUpload(file, "aerialMap", "Building")}
               onRemove={() => removeFile("aerialMap", "Building")}
               error={formErrors.buildingFiles.aerialMap}
+              disabled={type === "viewonly"}
             />
           </div>
         </div>
@@ -539,70 +606,77 @@ export default function Uploads() {
                 label="عقد التأسيس تقتصر فيه أغراض الشركة على النشاط التعليمي فقط"
                 ref={establishmentContractRef}
                 file={generalFiles.establishmentContract}
-                fileId={null}
+                fileId={generalFiles.establishmentContract?.id}
                 onUpload={(file) => handleFileUpload(file, "establishmentContract", "General")}
                 onRemove={() => removeFile("establishmentContract", "General")}
                 error={formErrors.generalFiles.establishmentContract}
+                disabled={type === "viewonly"}
               />
 
               <FileUploader
                 label="إثبات القيد السجل التجاري"
                 ref={commercialRegistryRef}
                 file={generalFiles.commercialRegistry}
-                fileId={null}
+                fileId={generalFiles.commercialRegistry?.id}
                 onUpload={(file) => handleFileUpload(file, "commercialRegistry", "General")}
                 onRemove={() => removeFile("commercialRegistry", "General")}
                 error={formErrors.generalFiles.commercialRegistry}
+                disabled={type === "viewonly"}
               />
 
               <FileUploader
                 label="اثبات قيد بالغرفة التجارية"
                 ref={chamberOfCommerceRef}
                 file={generalFiles.chamberOfCommerce}
-                fileId={null}
+                fileId={generalFiles.chamberOfCommerce?.id}
                 onUpload={(file) => handleFileUpload(file, "chamberOfCommerce", "General")}
                 onRemove={() => removeFile("chamberOfCommerce", "General")}
                 error={formErrors.generalFiles.chamberOfCommerce}
+                disabled={type === "viewonly"}
               />
 
               <FileUploader
                 label="اختيار مدير الشركة"
                 ref={managerSelectionRef}
                 file={generalFiles.managerSelection}
-                fileId={null}
+                fileId={generalFiles.managerSelection?.id}
                 onUpload={(file) => handleFileUpload(file, "managerSelection", "General")}
                 onRemove={() => removeFile("managerSelection", "General")}
                 error={formErrors.generalFiles.managerSelection}
+                disabled={type === "viewonly"}
               />
 
               <FileUploader
                 label="خلو من السوابق لمدير الشركة والمعلمين"
                 ref={criminalRecordRef}
                 file={generalFiles.criminalRecord}
-                fileId={null}
+                fileId={generalFiles.criminalRecord?.id}
                 onUpload={(file) => handleFileUpload(file, "criminalRecord", "General")}
                 onRemove={() => removeFile("criminalRecord", "General")}
                 error={formErrors.generalFiles.criminalRecord}
+                disabled={type === "viewonly"}
               />
 
               <FileUploader
                 label="الترخيص"
                 ref={licenseRef}
                 file={generalFiles.license}
-                fileId={null}
+                fileId={generalFiles.license?.id}
                 onUpload={(file) => handleFileUpload(file, "license", "General")}
                 onRemove={() => removeFile("license", "General")}
                 error={formErrors.generalFiles.license}
+                disabled={type === "viewonly"}
               />
 
               <FileUploader
                 label="المزاولة"
                 ref={practicePermitRef}
                 file={generalFiles.practicePermit}
-                fileId={null}
+                fileId={generalFiles.practicePermit?.id}
                 onUpload={(file) => handleFileUpload(file, "practicePermit", "General")}
                 onRemove={() => removeFile("practicePermit", "General")}
                 error={formErrors.generalFiles.practicePermit}
+                disabled={type === "viewonly"}
               />
             </div>
 
@@ -618,11 +692,16 @@ export default function Uploads() {
                     commitment: false
                   }));
                 }}
-                className={`mt-1 w-5 h-5 border rounded focus:ring-[#BE8D4A] cursor-pointer ${
+                disabled={type === "viewonly"}
+                className={`mt-1 w-5 h-5 border rounded focus:ring-[#BE8D4A] ${
+                  type === "viewonly" 
+                    ? "cursor-not-allowed opacity-50" 
+                    : "cursor-pointer"
+                } ${
                   formErrors.commitment ? "border-red-500 text-red-600" : "text-[#BE8D4A] border-gray-300"
                 }`}
               />
-              <label htmlFor="commitment" className={`text-base cursor-pointer ${formErrors.commitment ? "text-red-600" : "text-gray-700"}`}>
+              <label htmlFor="commitment" className={`text-base ${type === "viewonly" ? "cursor-default" : "cursor-pointer"} ${formErrors.commitment ? "text-red-600" : "text-gray-700"}`}>
                 تعهد بالالتزام التام بالقوانين والوائح و القرارات المنظمة للتعليم الخاص
               </label>
             </div>
@@ -647,7 +726,10 @@ export default function Uploads() {
                   name="licenseNumber"
                   value={licenseForm.licenseNumber}
                   onChange={handleLicenseFormChange}
+                  disabled={type === "viewonly"}
                   className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BE8D4A] focus:border-transparent ${
+                    type === "viewonly" ? "bg-gray-100 cursor-not-allowed" : ""
+                  } ${
                     formErrors.licenseForm.licenseNumber ? "border-red-500" : "border-gray-300"
                   }`}
                   placeholder="أدخل رقم الترخيص"
@@ -664,7 +746,10 @@ export default function Uploads() {
                   name="issuePlace"
                   value={licenseForm.issuePlace}
                   onChange={handleLicenseFormChange}
+                  disabled={type === "viewonly"}
                   className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BE8D4A] focus:border-transparent ${
+                    type === "viewonly" ? "bg-gray-100 cursor-not-allowed" : ""
+                  } ${
                     formErrors.licenseForm.issuePlace ? "border-red-500" : "border-gray-300"
                   }`}
                   placeholder="أدخل مكان الصدور"
@@ -681,7 +766,10 @@ export default function Uploads() {
                   name="issueDate"
                   value={licenseForm.issueDate}
                   onChange={handleLicenseFormChange}
+                  disabled={type === "viewonly"}
                   className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BE8D4A] focus:border-transparent ${
+                    type === "viewonly" ? "bg-gray-100 cursor-not-allowed" : ""
+                  } ${
                     formErrors.licenseForm.issueDate ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -698,7 +786,10 @@ export default function Uploads() {
                   value={licenseForm.expiryDate}
                   onChange={handleLicenseFormChange}
                   min={licenseForm.issueDate}
+                  disabled={type === "viewonly"}
                   className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BE8D4A] focus:border-transparent ${
+                    type === "viewonly" ? "bg-gray-100 cursor-not-allowed" : ""
+                  } ${
                     formErrors.licenseForm.expiryDate || dateError ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -719,7 +810,10 @@ export default function Uploads() {
                   name="practicePermitNumber"
                   value={licenseForm.practicePermitNumber}
                   onChange={handleLicenseFormChange}
+                  disabled={type === "viewonly"}
                   className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BE8D4A] focus:border-transparent ${
+                    type === "viewonly" ? "bg-gray-100 cursor-not-allowed" : ""
+                  } ${
                     formErrors.licenseForm.practicePermitNumber ? "border-red-500" : "border-gray-300"
                   }`}
                   placeholder="أدخل رقم إذن المزاولة"
@@ -736,7 +830,10 @@ export default function Uploads() {
                   value={licenseForm.practicePermitEndDate}
                   onChange={handleLicenseFormChange}
                   min={licenseForm.practicePermitEndDate}
+                  disabled={type === "viewonly"}
                   className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BE8D4A] focus:border-transparent ${
+                    type === "viewonly" ? "bg-gray-100 cursor-not-allowed" : ""
+                  } ${
                     formErrors.licenseForm.practicePermitEndDate || dateError ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -758,7 +855,10 @@ export default function Uploads() {
                   name="validity"
                   value={licenseForm.validity}
                   onChange={handleLicenseFormChange}
+                  disabled={type === "viewonly"}
                   className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BE8D4A] focus:border-transparent ${
+                    type === "viewonly" ? "bg-gray-100 cursor-not-allowed" : ""
+                  } ${
                     formErrors.licenseForm.validity ? "border-red-500" : "border-gray-300"
                   }`}
                   placeholder="أدخل الصلاحية"
@@ -770,23 +870,25 @@ export default function Uploads() {
       )}
 
       {/* Submit button for the form */}
-      <div className="mt-8 flex justify-end gap-4 bg-white rounded-lg p-4">
-        <button
-          type="button"
-          className="bg-white border border-red-500 text-red-500 px-6 py-3 rounded-lg hover:bg-red-50 transition-colors font-medium"
-          onClick={() => navigate(-1)}
-        >
-          إلغاء
-        </button>
+      {type !== "viewonly" && (
+        <div className="mt-8 flex justify-end gap-4 bg-white rounded-lg p-4">
+          <button
+            type="button"
+            className="bg-white border border-red-500 text-red-500 px-6 py-3 rounded-lg hover:bg-red-50 transition-colors font-medium"
+            onClick={() => navigate(-1)}
+          >
+            إلغاء
+          </button>
 
-        <button
-          type="button"
-          onClick={handleSave}
-          className="bg-[#BE8D4A] text-white px-6 py-3 rounded-lg hover:bg-[#a67a3f] transition-colors font-medium"
-        >
-          حفظ
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={handleSave}
+            className="bg-[#BE8D4A] text-white px-6 py-3 rounded-lg hover:bg-[#a67a3f] transition-colors font-medium"
+          >
+            حفظ
+          </button>
+        </div>
+      )}
     </div>
   );
 }

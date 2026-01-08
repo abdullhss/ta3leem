@@ -21,13 +21,16 @@ const fadeIn = {
 const AddManager = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  console.log(location);
   
   // Get manager ID, manager data, and action from location state
   const managerId = location.state?.managerId
   const managerData = location.state?.managerData
+  const type = location.state?.type
   const action = location.state?.action || 0 // 0 = add, 1 = edit, 2 = delete
   const isEditMode = action === 1
   const isDeleteMode = action === 2
+  const isViewOnly = type === "viewonly" // Check if viewonly mode
   
   // File input refs
   const profileImageRef = useRef(null)
@@ -67,49 +70,46 @@ const AddManager = () => {
     }
   })
 
-  // Fetch schools on component mount
-  // const {schools, loading: schoolsLoading, error: schoolsError} = useSchools();
-  
-  // Fetch single manager data if in edit or delete mode
+  // Fetch single manager data if in edit, delete, or viewonly mode
   const deleteModeManagerId = isDeleteMode && managerData ? (managerData.id || managerData.Id) : null
-  const { SingleManger, loading: managerLoading } = useSingleManger(isEditMode ? managerId : (isDeleteMode ? deleteModeManagerId : null));
+  const { SingleManger, loading: managerLoading } = useSingleManger(isEditMode || isViewOnly ? managerId : (isDeleteMode ? deleteModeManagerId : null));
   
-  // Use managerData from state if in delete mode, otherwise use SingleManger from API
-  const currentManagerData = isDeleteMode ? (managerData || SingleManger) : SingleManger
+  // Use managerData from state if in delete or viewonly mode, otherwise use SingleManger from API
+  const currentManagerData = isDeleteMode || isViewOnly ? (managerData || SingleManger) : SingleManger
 
-  // Populate form when manager data is loaded in edit mode
+  // Populate form when manager data is loaded in edit or viewonly mode
   useEffect(() => {
-    if (isEditMode && SingleManger && Object.keys(SingleManger).length > 0) {
+    if ((isEditMode || isViewOnly) && currentManagerData && Object.keys(currentManagerData).length > 0) {
       // Set form values
-      setValue('fullName', SingleManger.FullName || '')
-      setValue('email', SingleManger.Email || '')
-      setValue('motherName', SingleManger.MotherName || '')
-      setValue('nationalId', SingleManger.NationalNum || '')
-      setValue('username', SingleManger.LoginName || '')
-      // setValue('schoolId', SingleManger.School_Id?.toString() || '')
+      setValue('fullName', currentManagerData.FullName || '')
+      setValue('email', currentManagerData.Email || '')
+      setValue('motherName', currentManagerData.MotherName || '')
+      setValue('nationalId', currentManagerData.NationalNum || '')
+      setValue('username', currentManagerData.LoginName || '')
+      // setValue('schoolId', currentManagerData.School_Id?.toString() || '')
       
       // Set file IDs (for existing files) - only set if file ID exists and is not 0
       // These will be used by FileDisplay to show view buttons
-      if (SingleManger.PictureAttach && SingleManger.PictureAttach !== 0) {
-        setValue('profileImageFileId', SingleManger.PictureAttach)
+      if (currentManagerData.PictureAttach && currentManagerData.PictureAttach !== 0) {
+        setValue('profileImageFileId', currentManagerData.PictureAttach)
       }
-      if (SingleManger.EductionAttach && SingleManger.EductionAttach !== 0) {
-        setValue('eduQualificationFileId', SingleManger.EductionAttach)
+      if (currentManagerData.EductionAttach && currentManagerData.EductionAttach !== 0) {
+        setValue('eduQualificationFileId', currentManagerData.EductionAttach)
       }
-      if (SingleManger.NationalNumAttach && SingleManger.NationalNumAttach !== 0) {
-        setValue('nationalIdFileId', SingleManger.NationalNumAttach)
+      if (currentManagerData.NationalNumAttach && currentManagerData.NationalNumAttach !== 0) {
+        setValue('nationalIdFileId', currentManagerData.NationalNumAttach)
       }
-      if (SingleManger.SecurityCardAttach && SingleManger.SecurityCardAttach !== 0) {
-        setValue('criminalRecordFileId', SingleManger.SecurityCardAttach)
+      if (currentManagerData.SecurityCardAttach && currentManagerData.SecurityCardAttach !== 0) {
+        setValue('criminalRecordFileId', currentManagerData.SecurityCardAttach)
       }
-      if (SingleManger.HealthCardAttach && SingleManger.HealthCardAttach !== 0) {
-        setValue('healthCertificateFileId', SingleManger.HealthCardAttach)
+      if (currentManagerData.HealthCardAttach && currentManagerData.HealthCardAttach !== 0) {
+        setValue('healthCertificateFileId', currentManagerData.HealthCardAttach)
       }
       
       // Note: Password fields are left empty for security reasons
       // User will need to enter new password if they want to change it
     }
-  }, [isEditMode, SingleManger, setValue])  
+  }, [isEditMode, isViewOnly, currentManagerData, setValue])  
 
   const handleFileUpload = async (file, type) => {
     if (!file) return
@@ -213,7 +213,7 @@ const AddManager = () => {
               }
             />
           )}
-          {file && (
+          {file && !isViewOnly && (
             <button
               type="button"
               onClick={() => removeFile(file.type)}
@@ -260,6 +260,12 @@ const AddManager = () => {
     // If delete mode, show confirmation modal
     if (isDeleteMode) {
       setShowDeleteModal(true)
+      return
+    }
+
+    // For viewonly mode, just navigate back
+    if (isViewOnly) {
+      navigate(-1)
       return
     }
 
@@ -331,8 +337,8 @@ const AddManager = () => {
     }
   }
 
-  // Show loading state while fetching manager data in edit or delete mode
-  if ((isEditMode || isDeleteMode) && managerLoading && !managerData) {
+  // Show loading state while fetching manager data in edit, delete, or viewonly mode
+  if ((isEditMode || isDeleteMode || isViewOnly) && managerLoading && !managerData) {
     return (
       <div className='flex flex-col gap-6 w-full'>
         <div className="flex items-center justify-center p-8 bg-white rounded-md">
@@ -370,7 +376,9 @@ const AddManager = () => {
             ? 'حذف مدير' 
             : isEditMode 
               ? 'تعديل مدير' 
-              : 'إضافة مدير جديد'}
+              : isViewOnly
+                ? 'عرض بيانات المدير'
+                : 'إضافة مدير جديد'}
         </h1>
       </div>
 
@@ -392,55 +400,77 @@ const AddManager = () => {
             
             <div className="flex flex-col md:flex-row items-center gap-6">
               {/* Image Preview/Upload Area */}
-              <div 
-                className="relative border-2 border-dashed border-gray-300 rounded-xl w-full max-w-[150px] h-[150px] overflow-hidden cursor-pointer hover:border-[#BE8D4A] transition-colors"
-                onClick={() => profileImageRef.current.click()}
-              >
-                {profileImagePreview ? (
-                  <>
-                    <img 
-                      src={profileImagePreview} 
-                      alt="Profile preview" 
-                      className="w-full h-full object-cover"
-                    />
-                    {/* Overlay for better UX */}
-                    <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-all flex items-center justify-center">
-                      <div className="text-white opacity-0 hover:opacity-100 transition-opacity text-center p-4">
-                        <Upload size={24} className="mx-auto mb-2" />
-                        <span className="text-sm">تغيير الصورة</span>
+              {!isViewOnly && (
+                <div 
+                  className="relative border-2 border-dashed border-gray-300 rounded-xl w-full max-w-[150px] h-[150px] overflow-hidden cursor-pointer hover:border-[#BE8D4A] transition-colors"
+                  onClick={() => !isViewOnly && profileImageRef.current.click()}
+                >
+                  {profileImagePreview ? (
+                    <>
+                      <img 
+                        src={profileImagePreview} 
+                        alt="Profile preview" 
+                        className="w-full h-full object-cover"
+                      />
+                      {/* Overlay for better UX */}
+                      <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-all flex items-center justify-center">
+                        <div className="text-white opacity-0 hover:opacity-100 transition-opacity text-center p-4">
+                          <Upload size={24} className="mx-auto mb-2" />
+                          <span className="text-sm">تغيير الصورة</span>
+                        </div>
                       </div>
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full p-4 text-gray-500">
+                      <Upload size={48} className="mb-4" />
+                      <p className="text-center mb-2">انقر لرفع صورة المدير</p>
                     </div>
-                  </>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full p-4 text-gray-500">
-                    <Upload size={48} className="mb-4" />
-                    <p className="text-center mb-2">انقر لرفع صورة المدير</p>
-                  </div>
-                )}
-                
-                <input
-                  type="file"
-                  hidden
-                  ref={profileImageRef}
-                  accept=".jpg,.jpeg,.png"
-                  onChange={(e) => handleFileUpload(e.target.files[0], "profileImage")}
-                />
-              </div>
-              {/* Show view button if profile image exists in edit mode */}
-              {isEditMode && SingleManger?.PictureAttach && SingleManger.PictureAttach !== 0 && (
-                <div className="flex items-center gap-2">
-                  <FileViewer 
-                    id={SingleManger.PictureAttach}
-                    customButton={
-                      <button
-                        type="button"
-                        className="flex items-center gap-2 bg-[#BE8D4A] text-white px-4 py-2 rounded hover:bg-[#a67a3f] transition-colors"
-                      >
-                        <Eye size={16} />
-                        عرض الصورة الحالية
-                      </button>
-                    }
+                  )}
+                  
+                  <input
+                    type="file"
+                    hidden
+                    ref={profileImageRef}
+                    accept=".jpg,.jpeg,.png"
+                    onChange={(e) => !isViewOnly && handleFileUpload(e.target.files[0], "profileImage")}
+                    disabled={isViewOnly}
                   />
+                </div>
+              )}
+              
+              {/* Show existing profile image if in viewonly, edit, or delete mode */}
+              {(isViewOnly || isEditMode) && currentManagerData?.PictureAttach && currentManagerData.PictureAttach !== 0 && (
+                <div className="flex flex-col items-center gap-4">
+                  {isViewOnly && (
+                    <div className="relative border-2 border-gray-200 rounded-xl w-full max-w-[150px] h-[150px] overflow-hidden">
+                      <FileViewer 
+                        id={currentManagerData.PictureAttach}
+                        customButton={
+                          <div className="w-full h-full">
+                            <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                              <Eye size={32} className="text-gray-400" />
+                            </div>
+                          </div>
+                        }
+                        showFileName={false}
+                      />
+                    </div>
+                  )}
+                  
+                  {isEditMode && (
+                    <FileViewer 
+                      id={currentManagerData.PictureAttach}
+                      customButton={
+                        <button
+                          type="button"
+                          className="flex items-center gap-2 bg-[#BE8D4A] text-white px-4 py-2 rounded hover:bg-[#a67a3f] transition-colors"
+                        >
+                          <Eye size={16} />
+                          عرض الصورة الحالية
+                        </button>
+                      }
+                    />
+                  )}
                 </div>
               )}
             </div>
@@ -466,6 +496,7 @@ const AddManager = () => {
                   message: "يرجى إدخال اسم رباعي صحيح"
                 }
               })}
+              disabled={isViewOnly}
             />
             {errors.fullName && (
               <span className="text-red-500 text-sm mt-1">{errors.fullName.message}</span>
@@ -488,6 +519,7 @@ const AddManager = () => {
                   message: "يرجى إدخال بريد إلكتروني صحيح"
                 }
               })}
+              disabled={isViewOnly}
             />
             {errors.email && (
               <span className="text-red-500 text-sm mt-1">{errors.email.message}</span>
@@ -510,6 +542,7 @@ const AddManager = () => {
                   message: "يرجى إدخال اسم رباعي صحيح"
                 }
               })}
+              disabled={isViewOnly}
             />
             {errors.motherName && (
               <span className="text-red-500 text-sm mt-1">{errors.motherName.message}</span>
@@ -532,33 +565,36 @@ const AddManager = () => {
                   message: "يجب أن يتكون الرقم الوطني من 10 أرقام"
                 }
               })}
+              disabled={isViewOnly}
             />
             {errors.nationalId && (
               <span className="text-red-500 text-sm mt-1">{errors.nationalId.message}</span>
             )}
           </div>
 
-          {/* اسم المستخدم */}
-          <div className="flex flex-col">
-            <label className="mb-1 font-semibold flex items-center gap-2">
-              اسم المستخدم
-            </label>
-            <input
-              type="text"
-              className="border border-gray-300 rounded px-3 py-2"
-              placeholder="ادخل اسم المستخدم"
-              {...register("username", { 
-                required: "هذا الحقل مطلوب",
-                minLength: {
-                  value: 3,
-                  message: "يجب أن يكون اسم المستخدم 3 أحرف على الأقل"
-                }
-              })}
-            />
-            {errors.username && (
-              <span className="text-red-500 text-sm mt-1">{errors.username.message}</span>
-            )}
-          </div>
+          {/* اسم المستخدم - Hide in edit mode or viewonly */}
+          {!isEditMode && !isViewOnly && (
+            <div className="flex flex-col">
+              <label className="mb-1 font-semibold flex items-center gap-2">
+                اسم المستخدم
+              </label>
+              <input
+                type="text"
+                className="border border-gray-300 rounded px-3 py-2"
+                placeholder="ادخل اسم المستخدم"
+                {...register("username", { 
+                  required: "هذا الحقل مطلوب",
+                  minLength: {
+                    value: 3,
+                    message: "يجب أن يكون اسم المستخدم 3 أحرف على الأقل"
+                  }
+                })}
+              />
+              {errors.username && (
+                <span className="text-red-500 text-sm mt-1">{errors.username.message}</span>
+              )}
+            </div>
+          )}
 
           {/* المدرسة */}
           {/* <div className="flex flex-col">
@@ -568,6 +604,7 @@ const AddManager = () => {
             <select
               className="border border-gray-300 rounded px-3 py-2"
               {...register("schoolId", { required: "هذا الحقل مطلوب" })}
+              disabled={isViewOnly}
             >
               <option value="">اختر المدرسة</option>
               {schools?.map((school) => (
@@ -581,193 +618,269 @@ const AddManager = () => {
             )}
           </div> */}
 
-          {/* كلمة المرور */}
-          <div className="flex flex-col">
-            <label className="mb-1 font-semibold flex items-center gap-2">
-              كلمة المرور {isEditMode && <span className="text-gray-500 text-sm font-normal">(اتركه فارغاً للاحتفاظ بالكلمة الحالية)</span>}
-            </label>
-            <input
-              type="password"
-              className="border border-gray-300 rounded px-3 py-2"
-              placeholder={isEditMode ? "اتركه فارغاً للاحتفاظ بالكلمة الحالية" : "كلمة المرور"}
-              {...register("password", { 
-                required: !isEditMode ? "هذا الحقل مطلوب" : false,
-                minLength: {
-                  value: 6,
-                  message: "يجب أن تكون كلمة المرور 6 أحرف على الأقل"
-                },
-                validate: value => {
-                  if (isEditMode && !value) return true // Optional in edit mode
-                  if (!isEditMode && !value) return "هذا الحقل مطلوب"
-                  if (value && value.length < 6) return "يجب أن تكون كلمة المرور 6 أحرف على الأقل"
-                  return true
-                }
-              })}
-            />
-            {errors.password && (
-              <span className="text-red-500 text-sm mt-1">{errors.password.message}</span>
-            )}
-          </div>
+          {/* كلمة المرور - Hide in edit mode or viewonly */}
+          {!isEditMode && !isViewOnly && (
+            <div className="flex flex-col">
+              <label className="mb-1 font-semibold flex items-center gap-2">
+                كلمة المرور
+              </label>
+              <input
+                type="password"
+                className="border border-gray-300 rounded px-3 py-2"
+                placeholder="كلمة المرور"
+                {...register("password", { 
+                  required: "هذا الحقل مطلوب",
+                  minLength: {
+                    value: 6,
+                    message: "يجب أن تكون كلمة المرور 6 أحرف على الأقل"
+                  }
+                })}
+              />
+              {errors.password && (
+                <span className="text-red-500 text-sm mt-1">{errors.password.message}</span>
+              )}
+            </div>
+          )}
 
-          {/* تأكيد كلمة المرور */}
-          <div className="flex flex-col">
-            <label className="mb-1 font-semibold flex items-center gap-2">
-              تأكيد كلمة المرور
-            </label>
-            <input
-              type="password"
-              className="border border-gray-300 rounded px-3 py-2"
-              placeholder={isEditMode ? "اتركه فارغاً للاحتفاظ بالكلمة الحالية" : "تأكيد كلمة المرور"}
-              {...register("confirmPassword", { 
-                required: !isEditMode ? "هذا الحقل مطلوب" : false,
-                validate: value => {
-                  const password = getValues('password')
-                  if (isEditMode && !password && !value) return true // Both empty in edit mode is OK
-                  if (!password && !value && !isEditMode) return "هذا الحقل مطلوب"
-                  if (password && value !== password) return "كلمات المرور غير متطابقة"
-                  return true
-                }
-              })}
-            />
-            {errors.confirmPassword && (
-              <span className="text-red-500 text-sm mt-1">{errors.confirmPassword.message}</span>
-            )}
-          </div>
+          {/* تأكيد كلمة المرور - Hide in edit mode or viewonly */}
+          {!isEditMode && !isViewOnly && (
+            <div className="flex flex-col">
+              <label className="mb-1 font-semibold flex items-center gap-2">
+                تأكيد كلمة المرور
+              </label>
+              <input
+                type="password"
+                className="border border-gray-300 rounded px-3 py-2"
+                placeholder="تأكيد كلمة المرور"
+                {...register("confirmPassword", { 
+                  required: "هذا الحقل مطلوب",
+                  validate: value => {
+                    const password = getValues('password')
+                    if (!password && !value) return "هذا الحقل مطلوب"
+                    if (password && value !== password) return "كلمات المرور غير متطابقة"
+                    return true
+                  }
+                })}
+              />
+              {errors.confirmPassword && (
+                <span className="text-red-500 text-sm mt-1">{errors.confirmPassword.message}</span>
+              )}
+            </div>
+          )}
 
           {/* المرفقات */}
-          <div className="flex flex-col gap-3 col-span-1 md:col-span-2 mt-4">
-            <h3 className="font-bold text-lg">المرفقات المطلوبة</h3>
+          {!isViewOnly && (
+            <div className="flex flex-col gap-3 col-span-1 md:col-span-2 mt-4">
+              <h3 className="font-bold text-lg">المرفقات المطلوبة</h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* مرفق المؤهل العلمي التربوي */}
-              <div className="flex flex-col w-full">
-                <div className="flex flex-col md:flex-row md:items-center gap-2 w-full">
-                  <button
-                    type="button"
-                    onClick={() => eduQualificationRef.current.click()}
-                    className="flex items-center justify-center gap-2 bg-[#BE8D4A] text-white px-4 py-2.5 rounded w-full md:w-1/2"
-                  >
-                    <Paperclip />
-                    المؤهل العلمي التربوي
-                  </button>
-                  
-                  <FileDisplay 
-                    file={uploadedFiles.eduQualification} 
-                    fileId={isEditMode && SingleManger?.EductionAttach && SingleManger.EductionAttach !== 0 ? SingleManger.EductionAttach : null}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* مرفق المؤهل العلمي التربوي */}
+                <div className="flex flex-col w-full">
+                  <div className="flex flex-col md:flex-row md:items-center gap-2 w-full">
+                    <button
+                      type="button"
+                      onClick={() => eduQualificationRef.current.click()}
+                      className="flex items-center justify-center gap-2 bg-[#BE8D4A] text-white px-4 py-2.5 rounded w-full md:w-1/2"
+                    >
+                      <Paperclip />
+                      المؤهل العلمي التربوي
+                    </button>
+                    
+                    <FileDisplay 
+                      file={uploadedFiles.eduQualification} 
+                      fileId={isEditMode && currentManagerData?.EductionAttach && currentManagerData.EductionAttach !== 0 ? currentManagerData.EductionAttach : null}
+                    />
+                  </div>
+                  {errors.eduQualificationFileId && (
+                    <span className="text-red-500 text-sm mt-1">
+                      هذا المرفق مطلوب
+                    </span>
+                  )}
+                  <input
+                    type="file"
+                    hidden
+                    {...register("eduQualificationFileId", { required: true })}
+                    ref={eduQualificationRef}
+                    onChange={(e) => handleFileUpload(e.target.files[0], "eduQualification")}
+                    accept=".pdf,.jpg,.jpeg,.png"
                   />
                 </div>
-                {errors.eduQualificationFileId && (
-                  <span className="text-red-500 text-sm mt-1">
-                    هذا المرفق مطلوب
-                  </span>
-                )}
-                <input
-                  type="file"
-                  hidden
-                  {...register("eduQualificationFileId", { required: true })}
-                  ref={eduQualificationRef}
-                  onChange={(e) => handleFileUpload(e.target.files[0], "eduQualification")}
-                  accept=".pdf,.jpg,.jpeg,.png"
-                />
-              </div>
 
-              {/* مرفق الرقم الوطني */}
-              <div className="flex flex-col w-full">
-                <div className="flex flex-col md:flex-row md:items-center gap-2 w-full">
-                  <button
-                    type="button"
-                    onClick={() => nationalIdRef.current.click()}
-                    className="flex items-center justify-center gap-2 bg-[#BE8D4A] text-white px-4 py-2.5 rounded w-full md:w-1/2"
-                  >
-                    <Paperclip />
-                    الرقم الوطني
-                  </button>
-                  
-                  <FileDisplay 
-                    file={uploadedFiles.nationalId} 
-                    fileId={isEditMode && SingleManger?.NationalNumAttach && SingleManger.NationalNumAttach !== 0 ? SingleManger.NationalNumAttach : null}
+                {/* مرفق الرقم الوطني */}
+                <div className="flex flex-col w-full">
+                  <div className="flex flex-col md:flex-row md:items-center gap-2 w-full">
+                    <button
+                      type="button"
+                      onClick={() => nationalIdRef.current.click()}
+                      className="flex items-center justify-center gap-2 bg-[#BE8D4A] text-white px-4 py-2.5 rounded w-full md:w-1/2"
+                    >
+                      <Paperclip />
+                      الرقم الوطني
+                    </button>
+                    
+                    <FileDisplay 
+                      file={uploadedFiles.nationalId} 
+                      fileId={isEditMode && currentManagerData?.NationalNumAttach && currentManagerData.NationalNumAttach !== 0 ? currentManagerData.NationalNumAttach : null}
+                    />
+                  </div>
+                  {errors.nationalIdFileId && (
+                    <span className="text-red-500 text-sm mt-1">
+                      هذا المرفق مطلوب
+                    </span>
+                  )}
+                  <input
+                    type="file"
+                    hidden
+                    {...register("nationalIdFileId", { required: true })}
+                    ref={nationalIdRef}
+                    onChange={(e) => handleFileUpload(e.target.files[0], "nationalId")}
+                    accept=".pdf,.jpg,.jpeg,.png"
                   />
                 </div>
-                {errors.nationalIdFileId && (
-                  <span className="text-red-500 text-sm mt-1">
-                    هذا المرفق مطلوب
-                  </span>
-                )}
-                <input
-                  type="file"
-                  hidden
-                  {...register("nationalIdFileId", { required: true })}
-                  ref={nationalIdRef}
-                  onChange={(e) => handleFileUpload(e.target.files[0], "nationalId")}
-                  accept=".pdf,.jpg,.jpeg,.png"
-                />
-              </div>
 
-              {/* الخلو من السوابق الجنائية */}
-              <div className="flex flex-col w-full">
-                <div className="flex flex-col md:flex-row md:items-center gap-2 w-full">
-                  <button
-                    type="button"
-                    onClick={() => criminalRecordRef.current.click()}
-                    className="flex items-center justify-center gap-2 bg-[#BE8D4A] text-white px-4 py-2.5 rounded w-full md:w-1/2"
-                  >
-                    <Paperclip />
-                    الخلو من السوابق الجنائية
-                  </button>
-                  
-                  <FileDisplay 
-                    file={uploadedFiles.criminalRecord} 
-                    fileId={isEditMode && SingleManger?.SecurityCardAttach && SingleManger.SecurityCardAttach !== 0 ? SingleManger.SecurityCardAttach : null}
+                {/* الخلو من السوابق الجنائية */}
+                <div className="flex flex-col w-full">
+                  <div className="flex flex-col md:flex-row md:items-center gap-2 w-full">
+                    <button
+                      type="button"
+                      onClick={() => criminalRecordRef.current.click()}
+                      className="flex items-center justify-center gap-2 bg-[#BE8D4A] text-white px-4 py-2.5 rounded w-full md:w-1/2"
+                    >
+                      <Paperclip />
+                      الخلو من السوابق الجنائية
+                    </button>
+                    
+                    <FileDisplay 
+                      file={uploadedFiles.criminalRecord} 
+                      fileId={isEditMode && currentManagerData?.SecurityCardAttach && currentManagerData.SecurityCardAttach !== 0 ? currentManagerData.SecurityCardAttach : null}
+                    />
+                  </div>
+                  {errors.criminalRecordFileId && (
+                    <span className="text-red-500 text-sm mt-1">
+                      هذا المرفق مطلوب
+                    </span>
+                  )}
+                  <input
+                    type="file"
+                    hidden
+                    {...register("criminalRecordFileId", { required: true })}
+                    ref={criminalRecordRef}
+                    onChange={(e) => handleFileUpload(e.target.files[0], "criminalRecord")}
+                    accept=".pdf,.jpg,.jpeg,.png"
                   />
                 </div>
-                {errors.criminalRecordFileId && (
-                  <span className="text-red-500 text-sm mt-1">
-                    هذا المرفق مطلوب
-                  </span>
-                )}
-                <input
-                  type="file"
-                  hidden
-                  {...register("criminalRecordFileId", { required: true })}
-                  ref={criminalRecordRef}
-                  onChange={(e) => handleFileUpload(e.target.files[0], "criminalRecord")}
-                  accept=".pdf,.jpg,.jpeg,.png"
-                />
-              </div>
 
-              {/* شهادة اللياقة الصحية */}
-              <div className="flex flex-col w-full">
-                <div className="flex flex-col md:flex-row md:items-center gap-2 w-full">
-                  <button
-                    type="button"
-                    onClick={() => healthCertificateRef.current.click()}
-                    className="flex items-center justify-center gap-2 bg-[#BE8D4A] text-white px-4 py-2.5 rounded w-full md:w-1/2"
-                  >
-                    <Paperclip />
-                    شهادة اللياقة الصحية
-                  </button>
-                  
-                  <FileDisplay 
-                    file={uploadedFiles.healthCertificate} 
-                    fileId={isEditMode && SingleManger?.HealthCardAttach && SingleManger.HealthCardAttach !== 0 ? SingleManger.HealthCardAttach : null}
+                {/* شهادة اللياقة الصحية */}
+                <div className="flex flex-col w-full">
+                  <div className="flex flex-col md:flex-row md:items-center gap-2 w-full">
+                    <button
+                      type="button"
+                      onClick={() => healthCertificateRef.current.click()}
+                      className="flex items-center justify-center gap-2 bg-[#BE8D4A] text-white px-4 py-2.5 rounded w-full md:w-1/2"
+                    >
+                      <Paperclip />
+                      شهادة اللياقة الصحية
+                    </button>
+                    
+                    <FileDisplay 
+                      file={uploadedFiles.healthCertificate} 
+                      fileId={isEditMode && currentManagerData?.HealthCardAttach && currentManagerData.HealthCardAttach !== 0 ? currentManagerData.HealthCardAttach : null}
+                    />
+                  </div>
+                  {errors.healthCertificateFileId && (
+                    <span className="text-red-500 text-sm mt-1">
+                      هذا المرفق مطلوب
+                    </span>
+                  )}
+                  <input
+                    type="file"
+                    hidden
+                    {...register("healthCertificateFileId", { required: true })}
+                    ref={healthCertificateRef}
+                    onChange={(e) => handleFileUpload(e.target.files[0], "healthCertificate")}
+                    accept=".pdf,.jpg,.jpeg,.png"
                   />
                 </div>
-                {errors.healthCertificateFileId && (
-                  <span className="text-red-500 text-sm mt-1">
-                    هذا المرفق مطلوب
-                  </span>
-                )}
-                <input
-                  type="file"
-                  hidden
-                  {...register("healthCertificateFileId", { required: true })}
-                  ref={healthCertificateRef}
-                  onChange={(e) => handleFileUpload(e.target.files[0], "healthCertificate")}
-                  accept=".pdf,.jpg,.jpeg,.png"
-                />
               </div>
             </div>
-          </div>
+          )}
+
+          {/* View only attachments display */}
+          {isViewOnly && (
+            <div className="flex flex-col gap-3 col-span-1 md:col-span-2 mt-4">
+              <h3 className="font-bold text-lg">المرفقات</h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* مرفق المؤهل العلمي التربوي */}
+                {currentManagerData?.EductionAttach && currentManagerData.EductionAttach !== 0 && (
+                  <div className="flex flex-col w-full">
+                    <div className="flex flex-col md:flex-row md:items-center gap-2 w-full">
+                      <div className="flex items-center justify-center gap-2 bg-gray-200 text-gray-700 px-4 py-2.5 rounded w-full md:w-1/2">
+                        <Paperclip />
+                        المؤهل العلمي التربوي
+                      </div>
+                      
+                      <FileDisplay 
+                        file={null} 
+                        fileId={currentManagerData.EductionAttach}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* مرفق الرقم الوطني */}
+                {currentManagerData?.NationalNumAttach && currentManagerData.NationalNumAttach !== 0 && (
+                  <div className="flex flex-col w-full">
+                    <div className="flex flex-col md:flex-row md:items-center gap-2 w-full">
+                      <div className="flex items-center justify-center gap-2 bg-gray-200 text-gray-700 px-4 py-2.5 rounded w-full md:w-1/2">
+                        <Paperclip />
+                        الرقم الوطني
+                      </div>
+                      
+                      <FileDisplay 
+                        file={null} 
+                        fileId={currentManagerData.NationalNumAttach}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* الخلو من السوابق الجنائية */}
+                {currentManagerData?.SecurityCardAttach && currentManagerData.SecurityCardAttach !== 0 && (
+                  <div className="flex flex-col w-full">
+                    <div className="flex flex-col md:flex-row md:items-center gap-2 w-full">
+                      <div className="flex items-center justify-center gap-2 bg-gray-200 text-gray-700 px-4 py-2.5 rounded w-full md:w-1/2">
+                        <Paperclip />
+                        الخلو من السوابق الجنائية
+                      </div>
+                      
+                      <FileDisplay 
+                        file={null} 
+                        fileId={currentManagerData.SecurityCardAttach}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* شهادة اللياقة الصحية */}
+                {currentManagerData?.HealthCardAttach && currentManagerData.HealthCardAttach !== 0 && (
+                  <div className="flex flex-col w-full">
+                    <div className="flex flex-col md:flex-row md:items-center gap-2 w-full">
+                      <div className="flex items-center justify-center gap-2 bg-gray-200 text-gray-700 px-4 py-2.5 rounded w-full md:w-1/2">
+                        <Paperclip />
+                        شهادة اللياقة الصحية
+                      </div>
+                      
+                      <FileDisplay 
+                        file={null} 
+                        fileId={currentManagerData.HealthCardAttach}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </form>
       </motion.div>
       )}
@@ -788,47 +901,50 @@ const AddManager = () => {
         </motion.div>
       )}
 
-      <div className="flex flex-col items-center font-bold gap-6 p-4 md:p-6 bg-white rounded-md">
-        {!isDeleteMode && (
-          <div className="flex flex-col md:flex-row gap-4 w-full">
-            <Button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="px-6 py-3 rounded font-semibold border border-red-500 bg-transparent text-red-500 hover:bg-red-500 hover:text-white transition-colors w-full md:w-auto"
-            >
-              إلغاء
-            </Button>
+      {/* Buttons - Hide in viewonly mode */}
+      {!isViewOnly && (
+        <div className="flex flex-col items-center font-bold gap-6 p-4 md:p-6 bg-white rounded-md">
+          {!isDeleteMode && (
+            <div className="flex flex-col md:flex-row gap-4 w-full">
+              <Button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="px-6 py-3 rounded font-semibold border border-red-500 bg-transparent text-red-500 hover:bg-red-500 hover:text-white transition-colors w-full md:w-auto"
+              >
+                إلغاء
+              </Button>
 
-            <Button
-              type="submit"
-              onClick={handleSubmit(onSubmit)}
-              className="bg-[#BE8D4A] text-white px-6 py-3 rounded font-semibold hover:bg-[#a67a3f] transition-colors w-full md:w-auto"
-              disabled={!managerLoading}
-            >
-              {isEditMode ? 'تعديل المدير' : 'حفظ المدير'}
-            </Button>
-          </div>
-        )}
-        
-        {isDeleteMode && (
-          <div className="flex gap-4 w-full">
-            <Button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="px-6 py-4 rounded font-semibold w-1/2 border border-gray-500 bg-transparent text-gray-700 hover:bg-gray-100 transition-colors"
-            >
-              إلغاء
-            </Button>
-            <Button
-              type="button"
-              onClick={() => setShowDeleteModal(true)}
-              className="px-6 py-4 rounded font-semibold w-1/2 bg-red-500 text-white hover:bg-red-600 transition-colors"
-            >
-              حذف المدير
-            </Button>
-          </div>
-        )}
-      </div>
+              <Button
+                type="submit"
+                onClick={handleSubmit(onSubmit)}
+                className="bg-[#BE8D4A] text-white px-6 py-3 rounded font-semibold hover:bg-[#a67a3f] transition-colors w-full md:w-auto"
+                disabled={!managerLoading}
+              >
+                {isEditMode ? 'تعديل المدير' : 'حفظ المدير'}
+              </Button>
+            </div>
+          )}
+          
+          {isDeleteMode && (
+            <div className="flex gap-4 w-full">
+              <Button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="px-6 py-4 rounded font-semibold w-1/2 border border-gray-500 bg-transparent text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                إلغاء
+              </Button>
+              <Button
+                type="button"
+                onClick={() => setShowDeleteModal(true)}
+                className="px-6 py-4 rounded font-semibold w-1/2 bg-red-500 text-white hover:bg-red-600 transition-colors"
+              >
+                حذف المدير
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

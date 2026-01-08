@@ -116,6 +116,15 @@ export default function Mangers() {
         AddButtonProps={{ title: "إضافة مدير", path: "/requests/add-manger" }}
         actionsConfig={actionsConfig}
         searchPlaceholder="ابحث باسم المدير..."
+        onDoubleClick={(manager)=>{
+            navigate("/requests/add-manger", {
+              state: {
+                action: 1,
+                managerId: manager.id,
+                type: "viewonly",
+              },
+            });
+        }}
       />
     </div>
   );
