@@ -46,6 +46,7 @@ function App() {
         <Route path="/mangers" element={<Mangers />} />
         <Route path="/account-info" element={<AccountInfo />} />
         <Route path="/add-mofwad-masogat" element={<AddMofwadMasogat />} />
+        <Route path="/school-info" element={<Dashboard />} />
       </Route>
     </Routes>
   )

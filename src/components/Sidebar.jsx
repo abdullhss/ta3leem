@@ -40,32 +40,7 @@ const accordionVariants = {
 
 
 // Menu items data
-const menuItems = [
-  { 
-    title: 'المدارس', 
-    path: '/schools/new',
-    sublinks: [
-      { title: 'المدارس الجديدة', path: '/schools/new' },
-      { title: 'المدارس القائمة', path: '/schools/old' }
-    ]
-  },
-  { 
-    title: 'قائمة الطلبات', 
-    path: '/requests',
-    sublinks: [
-      { title: 'تقديم طلب إنشاء مدرسة', path: '/requests/create-school' },
-      { title: 'تقديم طلب نقل مدرسة', path: '/requests/transfer-school' },
-      { title: 'طلب تكليف مدير مدرسة جديد', path: '/requests/assign-principal' },
-      { title: 'الطلبات الاخرى', path: '/requests/other' },
-      { title: 'طلبات التجديد', path: '/requests/renewal' },
-      { title: 'طلب زيارة', path: '/requests/visit' }
-    ]
-  },
-  // { title: 'رفع المسوغات', path: '/uploads' },
-  { title: 'الإشعارات', path: '/notifications' },
-  { title: 'المدراء', path: '/mangers' },
-  { title: 'معلومات حساب المفوض', path: '/account-info' }
-];
+
 
 export default function Sidebar() {
   const { isDrawerOpen } = useSelector(state => state.system);
@@ -76,7 +51,52 @@ export default function Sidebar() {
   const [activePath, setActivePath] = useState(pathname);
   const [expandedItems, setExpandedItems] = useState({});
   const userData = useSelector((state) => state.auth.userData);
+  const isMofwad = userData.role == "Mofwad";
   const matchUpMD = window.innerWidth >= 768;
+
+
+
+  const menuItems = isMofwad ? [
+    { 
+      title: 'المدارس', 
+      path: '/schools/new',
+      sublinks: [
+        { title: 'المدارس الجديدة', path: '/schools/new' },
+        { title: 'المدارس القائمة', path: '/schools/old' }
+      ]
+    },
+    { 
+      title: 'قائمة الطلبات', 
+      path: '/requests',
+      sublinks: [
+        { title: 'تقديم طلب إنشاء مدرسة', path: '/requests/create-school' },
+        { title: 'تقديم طلب نقل مدرسة', path: '/requests/transfer-school' },
+        { title: 'طلب تكليف مدير مدرسة جديد', path: '/requests/assign-principal' },
+        { title: 'الطلبات الاخرى', path: '/requests/other' },
+        { title: 'طلبات التجديد', path: '/requests/renewal' },
+        { title: 'طلب زيارة', path: '/requests/visit' }
+      ]
+    },
+    // { title: 'رفع المسوغات', path: '/uploads' },
+    { title: 'الإشعارات', path: '/notifications' },
+    { title: 'المدراء', path: '/mangers' },
+    { title: 'معلومات حساب المفوض', path: '/account-info' }
+  ] : [
+    { title: 'معلومات المدرسة الأساسية', path: '/school-info' } ,
+    { 
+      title: 'الشئون الإدارية', 
+      path: '/requests',
+      sublinks: [
+        { title: 'إدارة المراحل التعليمية', path: '/requests/create-school' },
+        { title: 'الإدارات', path: '/requests/transfer-school' },
+        { title: 'الاقسام', path: '/requests/other' },
+      ]
+    },
+    
+    { title: 'مجموعة الصلاحيات', path: '/permissions' },
+    { title: 'الإشعارات', path: '/notifications' },
+    { title: 'معلومات حساب', path: '/account-info' }
+  ]
 
   const handleClick = (path) => {
     if (!matchUpMD) dispatch(setSideMenuDrawer(false));

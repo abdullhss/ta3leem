@@ -24,11 +24,11 @@ const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { isAuthenticated } = useSelector((state) => state.auth);
-
+  const userData = useSelector((state) => state.auth.userData);
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/schools", { replace: true });
+      navigate(userData?.role == "Mofwad" ? "/schools/new" : "/school-info", { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
@@ -51,8 +51,8 @@ const Login = () => {
   const handleLogin = async () => {
     try {
       // Validation
-      loginSchema.parse(formData);
-      setErrors({});
+      // loginSchema.parse(formData);
+      // setErrors({});
 
       // FormData
       const data = new FormData();
@@ -76,7 +76,7 @@ const Login = () => {
             // dispatch(login(response.decrypted));
             toast.success("تم تسجيل الدخول بنجاح");
             // Navigate to dashboard after successful login
-            navigate("/dashboard");
+            navigate(JSON.parse(response.decrypted.userData)[0].role == "Mofwad" ? "/schools/new" : "/school-info");
         }
       } else {
         toast.error("فشل تسجيل الدخول. يرجى المحاولة مرة أخرى");
@@ -84,13 +84,14 @@ const Login = () => {
 
       console.log(response);
     } catch (err) {
-      if (err instanceof z.ZodError) {
-        const fieldErrors = {};
-        err.errors.forEach((e) => {
-          fieldErrors[e.path[0]] = e.message;
-        });
-        setErrors(fieldErrors);
-      }
+      toast.error("فشل تسجيل الدخول. يرجى المحاولة مرة أخرى");
+      // if (err instanceof z.ZodError) {
+      //   const fieldErrors = {};
+      //   err.errors.forEach((e) => {
+      //     fieldErrors[e.path[0]] = e.message;
+      //   });
+      //   setErrors(fieldErrors);
+      // }
     }
   };
 
