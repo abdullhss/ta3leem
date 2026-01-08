@@ -5,7 +5,7 @@ import { AES256Encryption } from "../utils/encryption";
 //"https://framework.md-license.com:8093/emsserver.dll/ERPDatabaseWorkFunctions";
 // http://185.207.251.48:8085/ERPDatabaseWorkFunctions/
 const API_BASE_URL =
-"http://185.207.251.48:8085/ERPDatabaseWorkFunctions";
+"https://framework.md-license.com:8093/emsserver.dll/ERPDatabaseWorkFunctions";
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
