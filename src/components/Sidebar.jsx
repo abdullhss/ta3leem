@@ -84,12 +84,11 @@ export default function Sidebar() {
   ] : [
     { title: 'معلومات المدرسة الأساسية', path: '/school-info' } ,
     { 
-      title: 'الشئون الإدارية', 
-      path: '/requests',
+      title: 'إدارة المراحل التعليمية', 
+      path: '/education-levels',
       sublinks: [
-        { title: 'إدارة المراحل التعليمية', path: '/requests/create-school' },
-        { title: 'الإدارات', path: '/requests/transfer-school' },
-        { title: 'الاقسام', path: '/requests/other' },
+        { title: 'إدارة المجموعات الدراسية', path: '/education-levels/groups' },
+        { title: 'اولياء الأمور', path: '/education-levels/parents' },
       ]
     },
     

@@ -19,6 +19,9 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import AddManger from './components/CreateSchool/Add Manger/AddManger.jsx'
 import School from './pages/School.jsx'
 import AddMofwadMasogat from './pages/AddMofwadMasogat.jsx'
+import Groups from './pages/Manger/Groups.jsx'
+import Parents from './pages/Manger/Parents.jsx'
+import AddParents from './pages/Manger/AddParents.jsx'
 
 function App() {
   return (
@@ -47,6 +50,9 @@ function App() {
         <Route path="/account-info" element={<AccountInfo />} />
         <Route path="/add-mofwad-masogat" element={<AddMofwadMasogat />} />
         <Route path="/school-info" element={<Dashboard />} />
+        <Route path="/education-levels/groups" element={<Groups />} />
+        <Route path="/education-levels/parents" element={<Parents />} />
+        <Route path="/education-levels/parents/add" element={<AddParents />} />
       </Route>
     </Routes>
   )
