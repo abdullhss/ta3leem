@@ -89,6 +89,7 @@ export default function Sidebar() {
       sublinks: [
         { title: 'إدارة المجموعات الدراسية', path: '/education-levels/groups' },
         { title: 'اولياء الأمور', path: '/education-levels/parents' },
+        { title: 'الطلاب', path: '/education-levels/students' },
       ]
     },
     

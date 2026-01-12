@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import useStudentParents from '../../hooks/useStudentParents';
 import { toast } from "react-toastify";
 import TablePage from '../../components/TablePage';
+import { useSelector } from 'react-redux';
 
 const Parents = () => {
   const [tableData, setTableData] = useState([]);
@@ -11,13 +12,13 @@ const Parents = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   
   const navigate = useNavigate();
-
+  const userData = useSelector((state) => state.auth.userData);
   // Calculate startNumber for pagination
   const startNumber = (currentPage - 1) * rowsPerPage + 1;
   
   // Fetch parents data with search and pagination
   const { StudentParents, StudentParentCount, loading, error } = useStudentParents(
-    0, // status (if applicable, adjust as needed)
+    userData.School_Id || 0,
     searchText,
     startNumber,
     rowsPerPage

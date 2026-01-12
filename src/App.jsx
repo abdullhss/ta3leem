@@ -22,6 +22,8 @@ import AddMofwadMasogat from './pages/AddMofwadMasogat.jsx'
 import Groups from './pages/Manger/Groups.jsx'
 import Parents from './pages/Manger/Parents.jsx'
 import AddParents from './pages/Manger/AddParents.jsx'
+import AddStudents from './pages/Manger/AddStudents.jsx'
+import Students from './pages/Manger/Students.jsx'
 
 function App() {
   return (
@@ -53,6 +55,8 @@ function App() {
         <Route path="/education-levels/groups" element={<Groups />} />
         <Route path="/education-levels/parents" element={<Parents />} />
         <Route path="/education-levels/parents/add" element={<AddParents />} />
+        <Route path="/education-levels/students" element={<Students />} />
+        <Route path="/education-levels/students/add" element={<AddStudents />} />
       </Route>
     </Routes>
   )
