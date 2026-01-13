@@ -247,7 +247,7 @@ const Signup = () => {
         ...data,
         uploadedFiles: uploadedFiles
       }
-      const payload = `0#${formData.name}#${formData.genderId}#${formData.phone}#${formData.email}#${formData.nationalityId || 0}#${formData.nationalId || 0}#${formData.passportNumber || 0}#${formData.residenceNumber || 0}#${formatDate(formData.residenceExpiry)}#${formData.uploadedFiles?.national?.id || 0}#${formData.uploadedFiles?.negative?.id || 0}#${formData.uploadedFiles?.passport?.id || 0}#${formData.uploadedFiles?.residence?.id || 0}#0#0#0#0#0#${formData.companyName}#${formData.username}#${formData.password}#0#0#default#0#0#`
+      const payload = `0#${formData.name}#${formData.genderId}#${formData.phone}#${formData.email}#${formData.nationalityId || 0}#${formData.nationalId || formData.passportNumber}#${formData.passportNumber || formData.nationalId}#${formData.residenceNumber || formData.nationalId}#${formatDate(formData.residenceExpiry)}#${formData.uploadedFiles?.national?.id || 0}#${formData.uploadedFiles?.negative?.id || 0}#${formData.uploadedFiles?.passport?.id || 0}#${formData.uploadedFiles?.residence?.id || 0}#0#0#0#0#0#${formData.companyName}#${formData.username}#${formData.password}#0#0#default#0#0#`
 
       console.log("Form Submission Data:", formData) ;
       const response = await DoTransaction("ekiVNGTkL2f4U3z4PaxoxA==" ,

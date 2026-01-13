@@ -18,7 +18,7 @@ const Parents = () => {
   
   // Fetch parents data with search and pagination
   const { StudentParents, StudentParentCount, loading, error } = useStudentParents(
-    userData.School_Id || 0,
+    userData.School_Id,
     searchText,
     startNumber,
     rowsPerPage

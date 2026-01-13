@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { toast } from 'react-toastify'
 import { DoTransaction } from '../../services/apiServices'
 import { ConfirmModal } from '../../global/global-modal/ConfirmModal'
+import { useSelector } from 'react-redux'
 
 const formSchema = z.object({
   name: z.string()
@@ -47,7 +48,7 @@ const AddParents = () => {
   const action = location.state?.action || 0 // 0 = add, 1 = edit, 2 = delete
   const isEditMode = action === 1
   const isDeleteMode = action === 2
-  
+  const userData = useSelector((state) => state.auth.userData);
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   
   const { 
@@ -121,7 +122,7 @@ const AddParents = () => {
     console.log(data)
     
     const parentId = isEditMode ? (parentData?.id || parentData?.Id || 0) : 0
-    const schoolId = parentData?.School_Id || 0
+    const schoolId = userData.School_Id
     
     try {
       const response = await DoTransaction(
