@@ -169,9 +169,9 @@ export default function Schools() {
         isFilteredByDate={false}
         rowsPerPageDefault={5}
         clickable={true}
-        tableTitle="المدارس"
+        tableTitle={ schoolType === 'New' ? 'المدارس الجديدة' : 'المدارس القائمة' }
         isHeaderSticky={true}
-        AddButtonProps={{ title: "إضافة مدرسة", path: "/requests/create-school" }}
+        AddButtonProps={{ title: schoolType === 'New' ? 'إضافة مدرسة جديدة' : 'إضافة مدرسة قائمة', path: "/requests/create-school" , state: { schoolType } }}
         actionsConfig={actionsConfig}
         searchPlaceholder="ابحث باسم المدرسة..."
         onDoubleClick={(school)=>{navigate(`${school.id}/${school._fullData.Office_Id}`)}}

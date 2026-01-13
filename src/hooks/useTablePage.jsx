@@ -44,7 +44,7 @@ export const useTable = ({
   specialCells,
   fetchApi,
   openModal,
-  AddButtonProps: { title, path, action } = {},
+  AddButtonProps: { title, path, action , state} = {},
   filters,
   showOfficeFilter,
   rowsPerPageDefault = 5,
@@ -169,7 +169,7 @@ export const useTable = ({
             className='p-2! bg-transparent min-w-max flex items-center gap-2 text-bold text-base hover:bg-transparent cursor-pointer text-dark' 
             onClick={() => {
               action && action?.()
-              path && navigate(path)
+              path && navigate(path , { state: state })
             }}
           >
             <PlusIcon height={30} width={30} className="text-primary"/>

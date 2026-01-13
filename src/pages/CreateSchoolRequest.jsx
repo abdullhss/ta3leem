@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function CreateSchoolRequest() {
   const location = useLocation();
-  const [schoolType, setSchoolType] = useState(null);
+  const [schoolType, setSchoolType] = useState(location?.state?.schoolType || null);
   const [schoolData, setSchoolData] = useState(null);
   const [action, setAction] = useState(0); // 0 = add, 1 = edit, 2 = delete
 

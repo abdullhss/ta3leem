@@ -320,7 +320,7 @@ const CreatSchoolForm = ({schoolType , setSchoolType, schoolData = null, action 
     
     const response = await DoTransaction(
       "dsaK2RNVIQXmf0/QbiS0Hg==",
-      `${schoolId}#${data.schoolName}#${userData.Id}#${data.latitude}#${data.longitude}#${selectedBaladiaId}#${data.office}#${data.siteImagesFileId || 0}#${data.neighborsApprovalFileId || 0}#${schoolType}#0#${schoolType=="New"?4:2}###0##0#0#0##0`,
+      `${schoolId}#${data.schoolName}#${userData.Id}#${data.latitude}#${data.longitude}#${selectedBaladiaId}#${data.office}#${data.siteImagesFileId || 0}#${data.neighborsApprovalFileId || 0}#${schoolType}#0#${schoolType=="New"? 2 : 4}###0##0#0#0##0`,
       wantedAction, // wanted action 0 add , 1 edit , 2 delete
       "Id#FullName#Mofwad_Id#latitude#longitude#Baldia_Id#Office_Id#LocationPictureAttach#neighborsApproveAttach#NewOrExist#SchoolManager_Id#SchoolStatus_Id#UniqueId#EducationLevel_Ids#SchoolGenderType_Id#EducationClass_Ids#EducationPeriod_Id#BuildingType_Id#BuildingAllowance_Id#Labor_Ids#BuildingOwnAttach"
     )
@@ -332,9 +332,7 @@ const CreatSchoolForm = ({schoolType , setSchoolType, schoolData = null, action 
       const successMessage = isEditMode ? "تم تعديل المدرسة بنجاح" : "تم اضافة المدرسة بنجاح"
       toast.success(successMessage)
       // Navigate back after successful edit
-      if (isEditMode && setSchoolType) {
-        setSchoolType(null)
-      }
+      navigate(-1)
     }
   }
 
@@ -610,6 +608,18 @@ const CreatSchoolForm = ({schoolType , setSchoolType, schoolData = null, action 
 
       <div className="flex flex-col items-center font-bold gap-6 p-4 md:p-6 bg-white rounded-md">
         {!isDeleteMode && (
+          <div className='flex items-center justify-between w-full gap-12'>
+          <Button
+            type="button"
+            onClick={() => {
+              if (setSchoolType) setSchoolType(null)
+              navigate(-1)
+            }}
+            className="px-6 py-4 rounded font-semibold w-full border border-red-500 bg-transparent text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+          >
+            إلغاء
+          </Button>
+
           <Button
             type="submit"
             onClick={handleSubmit(onSubmit)}
@@ -617,6 +627,7 @@ const CreatSchoolForm = ({schoolType , setSchoolType, schoolData = null, action 
           >
             {isEditMode ? "حفظ التعديلات" : "حفظ المدرسة"}
           </Button>
+        </div>
         )}
         
         {isDeleteMode && (
@@ -637,57 +648,6 @@ const CreatSchoolForm = ({schoolType , setSchoolType, schoolData = null, action 
               className="px-6 py-4 rounded font-semibold w-1/2 bg-red-500 text-white hover:bg-red-600 transition-colors"
             >
               حذف المدرسة
-            </Button>
-          </div>
-        )}
-        {!isDeleteMode && !isEditMode && (
-          <div className='flex items-center justify-between w-full gap-12'>
-            <Button
-              type="button"
-              onClick={() => {
-                if (setSchoolType) setSchoolType(null)
-                navigate(-1)
-              }}
-              className="px-6 py-4 rounded font-semibold w-1/4 border border-red-500 bg-transparent text-red-500 hover:bg-red-500 hover:text-white transition-colors"
-            >
-              إلغاء
-            </Button>
-
-            <Button
-              type="button"
-              onClick={()=>{navigate("/requests/add-manger")}}
-              className="bg-[#BE8D4A] text-white px-6 py-4 rounded font-semibold hover:bg-[#a67a3f] transition-colors w-1/4"
-            >
-              إضافة مدير
-            </Button>
-
-            <Button
-              type="button"
-              className="bg-[#BE8D4A] text-white px-6 py-4 rounded font-semibold hover:bg-[#a67a3f] transition-colors w-1/4"
-            >
-              إضافة مسوغات
-            </Button>
-
-            <Button
-              type="button"
-              className="bg-[#BE8D4A] text-white px-6 py-4 rounded font-semibold hover:bg-[#a67a3f] transition-colors w-1/4"
-            >
-              إرسال الطلب 
-            </Button>
-          </div>
-        )}
-        
-        {isEditMode && (
-          <div className='flex items-center justify-between w-full gap-12'>
-            <Button
-              type="button"
-              onClick={() => {
-                if (setSchoolType) setSchoolType(null)
-                navigate(-1)
-              }}
-              className="px-6 py-4 rounded font-semibold w-1/2 border border-red-500 bg-transparent text-red-500 hover:bg-red-500 hover:text-white transition-colors"
-            >
-              إلغاء
             </Button>
           </div>
         )}
