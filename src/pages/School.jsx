@@ -20,9 +20,7 @@ const School = () => {
   const { type, id, Office_id } = useParams();
   console.log(id, Office_id);
   const { SingleSchool, loading, error } = useSingleSchool(id, Office_id);  
-  console.log(SingleSchool);
-  const {Managers, totalCount, loading: mangersLoading, error: mangersError} = useMangers(1, "", 1, 10000);
-  console.log(Managers);
+  const {Managers, totalCount, loading: mangersLoading, error: mangersError} = useMangers(SingleSchool?.mofwad?.Id, 1, "", 1, 10000);
 
   const [openAddMangerModal, setOpenAddMangerModal] = useState(false);
   const navigate = useNavigate();

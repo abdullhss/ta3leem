@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TablePage from '../components/TablePage';
 import useMangers from '../hooks/manger/useMangers';
+import { useSelector } from 'react-redux';
 
 // Columns configuration for managers
 const columns = [
@@ -25,13 +26,19 @@ export default function Mangers() {
   // Calculate startNumber for pagination (1-indexed starting record number)
   const startNumber = (currentPage - 1) * rowsPerPage + 1;
   
+  const userData = useSelector((state) => state.auth.userData);
+  console.log(userData.Id);
+  
   // Pass search and pagination to hook - it will refetch when these change
   const { Managers, totalCount, loading } = useMangers(
-    -1, // isAvailable: -1 means all managers
+    userData.Id, // isAvailable: -1 means all managers
+    -1 , // isAvailable: -1 means all managers
     searchText,
     startNumber,
     rowsPerPage
   );
+  console.log(Managers);
+  
 
   // Transform data for table - preserve full manager data
   const transformDataForTable = (data) => {

@@ -3,7 +3,7 @@ import { executeProcedure } from "../../services/apiServices";
 
 // -1 all
 // 1 Not linked
-const useMangers = (isAvailable = -1, searchText = "" , startNumber = 1 , count = 10) => {
+const useMangers = ( mofwadId = -1, isAvailable = -1, searchText = "" , startNumber = 1 , count = 10) => {
   const [Managers, setManagers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -13,7 +13,7 @@ const useMangers = (isAvailable = -1, searchText = "" , startNumber = 1 , count 
     const getManagers = async () => {
       try {
         setLoading(true);
-        const response = await executeProcedure("sA7BMZ65gsUS1jyZzL1at+IdVX5sODwMRTKtALzpM3s=" , `${isAvailable}#$????#${searchText}#${startNumber}#${count}`);
+        const response = await executeProcedure("sA7BMZ65gsUS1jyZzL1at+IdVX5sODwMRTKtALzpM3s=" , `${mofwadId}#${isAvailable}#$????#${searchText}#${startNumber}#${count}`);
         setTotalCount(Number(response.decrypted.MangersCount));
         setManagers(response.decrypted.MangersData?JSON.parse(response.decrypted.MangersData):[]);
       } catch (err) {
@@ -24,7 +24,7 @@ const useMangers = (isAvailable = -1, searchText = "" , startNumber = 1 , count 
     };
 
     getManagers();
-  }, [isAvailable, searchText, startNumber, count]);
+  }, [mofwadId, isAvailable, searchText, startNumber, count]);
 
   return { Managers, totalCount, loading, error };
 };

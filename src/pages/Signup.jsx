@@ -11,6 +11,7 @@ import useNationality from '../hooks/useNationality'
 import useUploadFiles from '../hooks/useUploadFiles'
 import { DoTransaction } from '../services/apiServices'
 import { toast } from 'react-toastify'
+import { Link, useNavigate } from 'react-router-dom'
 
 // Animation variants
 const fadeIn = {
@@ -147,7 +148,7 @@ const Signup = () => {
   const { genders, loading: loadingGenders } = useGender()
   const { nationalities, loading: loadingNationalities } = useNationality()
   const { uploadSingleFile } = useUploadFiles()
-
+  const navigate = useNavigate()
   const {
     register,
     handleSubmit,
@@ -257,6 +258,7 @@ const Signup = () => {
       
       if(response.success == 200){
          toast.success("تم انشاء الحساب بنجاح");
+         navigate("/login")
       }
       else{
          toast.error(response.errorMessage);
@@ -712,6 +714,15 @@ const Signup = () => {
           >
             {isSubmitting ? 'جاري الإرسال...' : 'طلب إنشاء حساب'}
           </button>
+          <Link to="/login" className='text-center text-sm mt-4 w-full flex items-center justify-center'>
+            لديك حساب؟
+            <Link
+              to="/login"
+              className="text-[#BE8D4A] mr-1 underline font-bold"
+            >
+              تسجيل الدخول
+            </Link>
+          </Link>
         </form>
 
         <footer className='w-full flex items-center justify-center my-6'>
