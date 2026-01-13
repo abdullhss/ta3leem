@@ -319,9 +319,9 @@ const AddManager = () => {
     try {
       const response = await DoTransaction(
         "wbMXck1ImGtMJHBzukySHA==",
-        `${isEditMode ? managerId : 0}#${data.fullName}#${data.motherName}#${data.email}#${data.nationalId}##${data.username}#${passwordToUse}#${data.nationalIdFileId}#${data.eduQualificationFileId}#${data.healthCertificateFileId}#${data.criminalRecordFileId}#${data.profileImageFileId || 0}`,
+        `${isEditMode ? managerId : 0}#${userData.Id}#${data.fullName}#${data.motherName}#${data.email}#${data.nationalId}##${data.username}#${passwordToUse}#${data.nationalIdFileId}#${data.eduQualificationFileId}#${data.healthCertificateFileId}#${data.criminalRecordFileId}#${data.profileImageFileId || 0}`,
         action, // wanted action 0 add , 1 edit , 2 delete
-        "Id#FullName#MotherName#Email#NationalNum#School_Id#LoginName#Password#NationalNumAttach#EductionAttach#HealthCardAttach#SecurityCardAttach#PictureAttach#User_Id"
+        "Id#Mofwad_Id#FullName#MotherName#Email#NationalNum#School_Id#LoginName#Password#NationalNumAttach#EductionAttach#HealthCardAttach#SecurityCardAttach#PictureAttach#User_Id"
       )
       
       console.log(response)
