@@ -92,7 +92,7 @@ export default function Sidebar() {
         { title: 'الطلاب', path: '/education-levels/students' },
       ]
     },
-    
+    {title: 'الادارات', path: '/Departments'},
     { title: 'مجموعة الصلاحيات', path: '/permissions' },
     { title: 'الإشعارات', path: '/notifications' },
     { title: 'معلومات حساب', path: '/account-info' }

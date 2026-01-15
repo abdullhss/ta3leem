@@ -24,6 +24,10 @@ import Parents from './pages/Manger/Parents.jsx'
 import AddParents from './pages/Manger/AddParents.jsx'
 import AddStudents from './pages/Manger/AddStudents.jsx'
 import Students from './pages/Manger/Students.jsx'
+import Departments from './pages/Manger/Departments.jsx'
+import AddDepartment from './pages/Manger/AddDepartment.jsx'
+import AddSchoolDevision from './pages/Manger/AddSchoolDevision.jsx'
+import SchoolDevisions from './pages/Manger/SchoolDevisions.jsx'
 
 function App() {
   return (
@@ -57,6 +61,10 @@ function App() {
         <Route path="/education-levels/parents/add" element={<AddParents />} />
         <Route path="/education-levels/students" element={<Students />} />
         <Route path="/education-levels/students/add" element={<AddStudents />} />
+        <Route path='/Departments' element={<Departments/>}/>
+        <Route path='/Departments/Add' element={<AddDepartment/>}/>
+        <Route path='/SchoolDevision/Add' element={<AddSchoolDevision/>}/>
+        <Route path='/SchoolDevisions' element={<SchoolDevisions/>}/>
       </Route>
     </Routes>
   )
