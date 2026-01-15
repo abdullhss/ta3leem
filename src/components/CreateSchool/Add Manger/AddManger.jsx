@@ -477,8 +477,18 @@ const AddManager = () => {
             
             <input
               type="hidden"
-              {...register("profileImageFileId")}
+              {...register("profileImageFileId", {
+                required: !isEditMode && !isViewOnly
+                  ? "صورة المدير مطلوبة"
+                  : false,
+              })}
             />
+            {errors.profileImageFileId && (
+              <span className="text-red-500 text-sm mt-2 block">
+                {errors.profileImageFileId.message}
+              </span>
+            )}
+
           </div>
           {/* اسم المدير رباعي */}
           <div className="flex flex-col">
@@ -557,12 +567,12 @@ const AddManager = () => {
             <input
               type="text"
               className="border border-gray-300 rounded px-3 py-2"
-              placeholder="10 أرقام"
+              placeholder="12 رقم"
               {...register("nationalId", { 
                 required: "هذا الحقل مطلوب",
                 pattern: {
-                  value: /^\d{10}$/,
-                  message: "يجب أن يتكون الرقم الوطني من 10 أرقام"
+                  value: /^[0-9]{12}$/,
+                  message: "يجب أن يتكون الرقم الوطني من 12 رقم"
                 }
               })}
               disabled={isViewOnly}

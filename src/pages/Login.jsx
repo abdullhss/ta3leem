@@ -51,8 +51,8 @@ const Login = () => {
   const handleLogin = async () => {
     try {
       // Validation
-      // loginSchema.parse(formData);
-      // setErrors({});
+      loginSchema.parse(formData);
+      setErrors({});
 
       // FormData
       const data = new FormData();
@@ -85,13 +85,13 @@ const Login = () => {
       console.log(response);
     } catch (err) {
       toast.error("فشل تسجيل الدخول. يرجى المحاولة مرة أخرى");
-      // if (err instanceof z.ZodError) {
-      //   const fieldErrors = {};
-      //   err.errors.forEach((e) => {
-      //     fieldErrors[e.path[0]] = e.message;
-      //   });
-      //   setErrors(fieldErrors);
-      // }
+      if (err instanceof z.ZodError) {
+        const fieldErrors = {};
+        err.errors.forEach((e) => {
+          fieldErrors[e.path[0]] = e.message;
+        });
+        setErrors(fieldErrors);
+      }
     }
   };
 
@@ -189,7 +189,7 @@ const Login = () => {
         </div>
       </div>
 
-      <span className="absolute bottom-5 text-sm font-semibold">
+      <span className="mt-4 text-sm font-semibold">
         © 2025 جميع الحقوق محفوظة لمنصة وزارة التربية و التعليم
       </span>
     </div>

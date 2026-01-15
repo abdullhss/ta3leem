@@ -61,12 +61,14 @@ export const signupSchema = z.object({
   email: z.string().email("بريد إلكتروني غير صالح"),
 
   username: z
-    .string()
-    .regex(/^[a-zA-Z]+$/, "اسم المستخدم يجب أن يحتوي على حروف فقط"),
+    .string().min(1, "اسم المستخدم مطلوب"),
 
   nationalityId: z.string().min(1, "الجنسية مطلوبة"),
 
-  nationalId: z.string().optional(),
+  nationalId: z
+  .string()
+  .regex(/^[0-9]{12}$/, "الرقم الوطني يجب أن يتكون من 12 رقم")
+  .optional(),
   nationalFileId: z.number().optional(),
 
   passportNumber: z.string().optional(),
@@ -129,6 +131,7 @@ export const signupSchema = z.object({
     });
   }
 });
+
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -166,8 +169,17 @@ const Signup = () => {
   const selectedNationality = watch("nationalityId")
 
   const handleFileUpload = async (file, type) => {
-    if (!file) return
+    if (!file) return;
     
+    // Validate file type - only accept PDF
+    const allowedTypes = ['application/pdf'];
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    
+    if (!allowedTypes.includes(file.type) && fileExtension !== 'pdf') {
+      toast.error("يرجى تحميل ملف PDF فقط");
+      return;
+    }
+
     const fileObj = {
       uid: Date.now(),
       originFileObj: file,
@@ -193,6 +205,7 @@ const Signup = () => {
       }
     } catch (error) {
       console.error("Upload failed:", error)
+      toast.error("فشل تحميل الملف. يرجى المحاولة مرة أخرى");
     }
   }
 
@@ -218,7 +231,11 @@ const Signup = () => {
         className="mt-2 border border-green-500 rounded-lg py-1.5 px-6 flex items-center justify-between bg-green-50"
       >
         <div className="flex items-center gap-2">
-          <Paperclip size={16} className="text-green-600" />
+          <div className="bg-red-100 p-1 rounded">
+            <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+            </svg>
+          </div>
           <span className="text-sm text-green-700 font-medium truncate max-w-[200px]">
             {file.name}
           </span>
@@ -233,12 +250,13 @@ const Signup = () => {
       </motion.div>
     )
   }
-    const formatDate = (dateStr) => {
+
+  const formatDate = (dateStr) => {
     if (!dateStr) return 0;
 
     const [year, month, day] = dateStr.split("-");
     return `${day}/${month}/${year}`;
-    };
+  }
 
   const onSubmit = async (data) => {
     setIsSubmitting(true)
@@ -266,7 +284,6 @@ const Signup = () => {
       
     } catch (error) {
       console.error("Submission error:", error)
-    //   alert("حدث خطأ أثناء الإرسال. يرجى المحاولة مرة أخرى.")
     } finally {
       setIsSubmitting(false)
     }
@@ -430,16 +447,20 @@ const Signup = () => {
                         onClick={() => nationalFileRef.current.click()}
                     >
                         <Paperclip />
-                        تحميل مرفق الرقم الوطني
+                        تحميل ملف PDF
                     </button>
                     <input
                         type="file"
                         ref={nationalFileRef}
                         hidden
                         onChange={(e) => handleFileUpload(e.target.files[0], "national")}
+                        accept=".pdf,application/pdf"
                     />
                     <FileDisplay file={uploadedFiles.national} />
                   </div>
+                  {errors.nationalFileId && (
+                    <span className="text-red-500 text-sm mt-1">{errors.nationalFileId.message}</span>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -463,13 +484,14 @@ const Signup = () => {
                             onClick={() => negativeCertRef.current.click()}
                             >
                             <Paperclip />
-                            تحميل شهادة سلبية
+                            تحميل ملف PDF
                             </button>
                             <input
                             type="file"
                             ref={negativeCertRef}
                             hidden
                             onChange={(e) => handleFileUpload(e.target.files[0], "negative")}
+                            accept=".pdf,application/pdf"
                             />
                             <FileDisplay file={uploadedFiles.negative} />
                         </div>
@@ -520,16 +542,20 @@ const Signup = () => {
                         onClick={() => passportFileRef.current.click()}
                     >
                         <Paperclip />
-                        تحميل مرفق جواز السفر
+                        تحميل ملف PDF
                     </button>
                     <input
                         type="file"
                         ref={passportFileRef}
                         hidden
                         onChange={(e) => handleFileUpload(e.target.files[0], "passport")}
+                        accept=".pdf,application/pdf"
                     />
                     <FileDisplay file={uploadedFiles.passport} />
                   </div>
+                  {errors.passportFileId && (
+                    <span className="text-red-500 text-sm mt-1">{errors.passportFileId.message}</span>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -576,16 +602,20 @@ const Signup = () => {
                         onClick={() => residenceFileRef.current.click()}
                     >
                         <Paperclip />
-                        تحميل مرفق رقم الإقامة
+                        تحميل ملف PDF
                     </button>
                     <input
                         type="file"
                         ref={residenceFileRef}
                         hidden
                         onChange={(e) => handleFileUpload(e.target.files[0], "residence")}
+                        accept=".pdf,application/pdf"
                     />
                     <FileDisplay file={uploadedFiles.residence} />
                   </div>
+                  {errors.residenceFileId && (
+                    <span className="text-red-500 text-sm mt-1">{errors.residenceFileId.message}</span>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -649,13 +679,14 @@ const Signup = () => {
                         onClick={() => negativeCertRef.current.click()}
                         >
                         <Paperclip />
-                        تحميل شهادة سلبية
+                        تحميل ملف PDF
                         </button>
                         <input
                         type="file"
                         ref={negativeCertRef}
                         hidden
                         onChange={(e) => handleFileUpload(e.target.files[0], "negative")}
+                        accept=".pdf,application/pdf"
                         />
                         <FileDisplay file={uploadedFiles.negative} />
                     </div>
