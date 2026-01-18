@@ -1,33 +1,41 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { DoTransaction } from '../../services/apiServices';
 import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const AddDepartmentForm = () => {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isValid },
   } = useForm({
     mode: 'onChange',
   });
   const { userData } = useSelector((state) => state.auth);
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Get department data and action from location state
+  const departmentData = location.state?.departmentData;
+  const action = location.state?.action || 0; // 0 = add, 1 = edit
+  const isEditMode = action === 1;
   const onSubmit = async(data) => {
+    const departmentId = isEditMode ? (departmentData?.id || departmentData?.Id || 0) : 0;
     const response = await DoTransaction(
       "ZIFEL17gLyWFPeaISNh4ydM8cDH8xmOCbmJhCEciZ/o=",
-      `0#${data.departmentName}#${data.managerId}#${userData.School_Id}`,
-      0,
+      `${departmentId}#${data.departmentName}#${data.managerId}#${userData.School_Id}`,
+      action, // 0 = add, 1 = edit, 2 = delete
       "Id#Description#SchoolEmployee_Id#School_id"
     );
     console.log(response);
     if(response.success != 200){
-      toast.error(response.errorMessage || "فشل العملية");
+      toast.error(response.errorMessage || (isEditMode ? "فشل التعديل" : "فشل العملية"));
     }else{
-      toast.success("تم إضافة الإدارة بنجاح");
+      toast.success(isEditMode ? "تم تعديل الإدارة بنجاح" : "تم إضافة الإدارة بنجاح");
       navigate("/Departments");
     }
   };
@@ -39,13 +47,21 @@ const AddDepartmentForm = () => {
     { id: 0, name: 'سارة محمد' },
   ];
 
+  // Populate form when in edit mode
+  useEffect(() => {
+    if (isEditMode && departmentData) {
+      setValue('departmentName', departmentData.Description || '');
+      setValue('managerId', departmentData.SchoolEmployee_Id || '');
+    }
+  }, [isEditMode, departmentData, setValue]);
+
   return (
     <div>
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="flex flex-col gap-6 p-4 sm:p-6 bg-white rounded-lg shadow"
       >
-        <span className="text-lg font-bold">إضافة إدارة جديدة</span>
+        <span className="text-lg font-bold">{isEditMode ? 'تعديل إدارة' : 'إضافة إدارة جديدة'}</span>
         
         <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
           {/* اسم الإدارة */}
@@ -85,7 +101,8 @@ const AddDepartmentForm = () => {
         <div className="flex gap-6">
           <button
             type="button"
-            className="border border-red-500 text-red-500 w-full py-3 rounded-md"
+            onClick={() => navigate(-1)}
+            className="border border-red-500 text-red-500 w-full py-3 rounded-md hover:bg-red-50 transition-colors"
           >
             إلغاء
           </button>
@@ -93,11 +110,11 @@ const AddDepartmentForm = () => {
           <button
             type="submit"
             disabled={!isValid}
-            className={`w-full py-3 rounded-md text-white ${
-              isValid ? 'bg-[#BE8D4A]' : 'bg-gray-400 cursor-not-allowed'
+            className={`w-full py-3 rounded-md text-white transition-colors ${
+              isValid ? 'bg-[#BE8D4A] hover:bg-[#a87a3f]' : 'bg-gray-400 cursor-not-allowed'
             }`}
           >
-            حفظ
+            {isEditMode ? 'تعديل' : 'حفظ'}
           </button>
         </div>
       </form>

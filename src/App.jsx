@@ -28,6 +28,8 @@ import Departments from './pages/Manger/Departments.jsx'
 import AddDepartment from './pages/Manger/AddDepartment.jsx'
 import AddSchoolDevision from './pages/Manger/AddSchoolDevision.jsx'
 import SchoolDevisions from './pages/Manger/SchoolDevisions.jsx'
+import Employees from './pages/Manger/Employees.jsx'
+import AddEmployees from './pages/Manger/AddEmployees.jsx'
 
 function App() {
   return (
@@ -63,8 +65,13 @@ function App() {
         <Route path="/education-levels/students/add" element={<AddStudents />} />
         <Route path='/Departments' element={<Departments/>}/>
         <Route path='/Departments/Add' element={<AddDepartment/>}/>
-        <Route path='/SchoolDevision/Add' element={<AddSchoolDevision/>}/>
+        <Route path='/Departments/Edit/:id' element={<AddDepartment/>}/>
+        <Route path='/SchoolDevisions/Add' element={<AddSchoolDevision/>}/>
+        <Route path='/SchoolDevisions/Edit/:id' element={<AddSchoolDevision/>}/>
         <Route path='/SchoolDevisions' element={<SchoolDevisions/>}/>
+        <Route path='/Employees' element={<Employees/>}/>
+        <Route path='/Employees/Add' element={<AddEmployees/>}/>
+        <Route path='/Employees/Edit/:id' element={<AddEmployees/>}/>
       </Route>
     </Routes>
   )

@@ -90,9 +90,11 @@ export default function Sidebar() {
         { title: 'إدارة المجموعات الدراسية', path: '/education-levels/groups' },
         { title: 'اولياء الأمور', path: '/education-levels/parents' },
         { title: 'الطلاب', path: '/education-levels/students' },
+        { title: 'الموظفين', path: '/Employees' },
       ]
     },
     {title: 'الادارات', path: '/Departments'},
+    {title: 'الاقسام', path: '/SchoolDevisions'},
     { title: 'مجموعة الصلاحيات', path: '/permissions' },
     { title: 'الإشعارات', path: '/notifications' },
     { title: 'معلومات حساب', path: '/account-info' }

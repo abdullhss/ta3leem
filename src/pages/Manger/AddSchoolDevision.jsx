@@ -1,18 +1,25 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux';
 import { DoTransaction } from '../../services/apiServices';
 import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const AddSchoolDevision = () => {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isValid }
   } = useForm()
   const { userData } = useSelector((state) => state.auth);
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Get devision data and action from location state
+  const devisionData = location.state?.devisionData;
+  const action = location.state?.action || 0; // 0 = add, 1 = edit
+  const isEditMode = action === 1;
   const departments = [
     { id: 0, name: 'إدارة التعليم الابتدائي' },
     { id: 0, name: 'إدارة التعليم الثانوي' },
@@ -29,21 +36,31 @@ const AddSchoolDevision = () => {
     { id: 0, name: 'خالد إبراهيم' }
   ]
 
-    const onSubmit = async (data) => {
-        const response = await DoTransaction(
-            "SI2sCeLI3BHIzngEXxosAg==",
-            `0#${data.divisionName}#${data.departmentId}#${data.headId}#${userData.School_Id}`,
-            0,
-            "Id#Description#SchoolDepartment_Id#SchoolEmployee_Id#School_id"
-        );
-        console.log(response);
-        if(response.success != 200){
-            toast.error(response.errorMessage || "فشل العملية");
-        }else{
-            toast.success("تم إضافة القسم بنجاح");
-            navigate("/SchoolDevision");
-        }
+  // Populate form when in edit mode
+  useEffect(() => {
+    if (isEditMode && devisionData) {
+      setValue('divisionName', devisionData.Description || '');
+      setValue('departmentId', devisionData.SchoolDepartment_Id || '');
+      setValue('headId', devisionData.SchoolEmployee_Id || '');
     }
+  }, [isEditMode, devisionData, setValue]);
+
+  const onSubmit = async (data) => {
+    const devisionId = isEditMode ? (devisionData?.id || devisionData?.Id || 0) : 0;
+    const response = await DoTransaction(
+      "SI2sCeLI3BHIzngEXxosAg==",
+      `${devisionId}#${data.divisionName}#${data.departmentId}#${data.headId}#${userData.School_Id}`,
+      action, // 0 = add, 1 = edit, 2 = delete
+      "Id#Description#SchoolDepartment_Id#SchoolEmployee_Id#School_id"
+    );
+    console.log(response);
+    if(response.success != 200){
+      toast.error(response.errorMessage || (isEditMode ? "فشل التعديل" : "فشل العملية"));
+    }else{
+      toast.success(isEditMode ? "تم تعديل القسم بنجاح" : "تم إضافة القسم بنجاح");
+      navigate("/SchoolDevisions");
+    }
+  }
 
   return (
     <div className="p-6">
@@ -51,7 +68,7 @@ const AddSchoolDevision = () => {
         onSubmit={handleSubmit(onSubmit)}
         className="flex flex-col gap-6 p-4 sm:p-6 bg-white rounded-lg shadow"
       >
-        <span className="text-lg font-bold">إضافة قسم جديد</span>
+        <span className="text-lg font-bold">{isEditMode ? 'تعديل قسم' : 'إضافة قسم جديد'}</span>
         
         <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
           {/* اسم القسم */}
@@ -110,6 +127,7 @@ const AddSchoolDevision = () => {
         <div className="flex gap-4 mt-4">
           <button
             type="button"
+            onClick={() => navigate(-1)}
             className="border border-red-500 text-red-500 hover:bg-red-50 w-full py-3 rounded-md font-medium transition-colors"
           >
             إلغاء
@@ -124,7 +142,7 @@ const AddSchoolDevision = () => {
                 : 'bg-gray-400 cursor-not-allowed'
             }`}
           >
-            إضافة
+            {isEditMode ? 'تعديل' : 'إضافة'}
           </button>
         </div>
       </form>

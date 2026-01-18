@@ -4,6 +4,8 @@ import { useSelector } from 'react-redux';
 import TablePage from '../../components/TablePage';
 import useSchoolDevision from '../../hooks/manger/useSchoolDevision';
 import { toast } from 'react-toastify';
+import { DoTransaction } from '../../services/apiServices';
+import { ConfirmModal } from '../../global/global-modal/ConfirmModal';
 
 const SchoolDevisions = () => {
   const { userData } = useSelector((state) => state.auth);
@@ -13,6 +15,8 @@ const SchoolDevisions = () => {
   const [searchText, setSearchText] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [devisionToDelete, setDevisionToDelete] = useState(null);
 
   // Pagination calculation
   const startNumber = (currentPage - 1) * rowsPerPage;
@@ -56,43 +60,100 @@ const SchoolDevisions = () => {
     // الـ hook هيشتغل تلقائي لما تتغير الـ state
   };
 
-  // Example actions (تقدر تعدّل حسب الحاجة)
+  // Handle delete
+  const handleDeleteClick = (item) => {
+    const data = item._fullData || item;
+    setDevisionToDelete(data);
+    setShowDeleteModal(true);
+  };
+
+  const handleDelete = async () => {
+    if (!devisionToDelete) return;
+
+    const devisionId = devisionToDelete.id || devisionToDelete.Id;
+    
+    try {
+      const response = await DoTransaction(
+        "SI2sCeLI3BHIzngEXxosAg==",
+        `${devisionId}`,
+        2, // 2 = delete
+        "Id"
+      );
+
+      if(response.success != 200){
+        toast.error(response.errorMessage || "فشل الحذف");
+      } else {
+        toast.success("تم حذف القسم بنجاح");
+        setShowDeleteModal(false);
+        setDevisionToDelete(null);
+        // Refresh the data by updating search or page
+        setCurrentPage(1);
+      }
+    } catch (error) {
+      console.error("Error deleting devision:", error);
+      toast.error("حدث خطأ أثناء حذف القسم");
+    }
+  };
+
+  // Actions configuration
   const actionsConfig = [
     {
       label: 'تعديل',
       onClick: (item) => {
         const data = item._fullData || item;
-        navigate(`/SchoolDevisions/Edit/${data.id}`, { state: { devisionData: data } });
+        navigate(`/SchoolDevisions/Edit/${data.id}`, { 
+          state: { 
+            devisionData: data,
+            action: 1 // 1 = edit
+          } 
+        });
       },
     },
     {
       label: 'حذف',
       danger: true,
       onClick: (item) => {
-        const data = item._fullData || item;
-        toast.warning('ميزة الحذف غير مفعلة بعد');
+        handleDeleteClick(item);
       },
     },
   ];
 
   return (
-    <div className="bg-white rounded-lg p-4">
-      <TablePage
-        data={tableData}
-        columns={columns}
-        totalCount={DevisionCount || 0}
-        fetchApi={fetchApi}
-        isLoading={loading}
-        tableTitle="الأقسام"
-        rowsPerPageDefault={5}
-        AddButtonProps={{
-          title: 'إضافة قسم',
-          path: '/SchoolDevisions/Add',
-        }}
-        actionsConfig={actionsConfig}
-        searchPlaceholder="ابحث باسم القسم..."
-      />
-    </div>
+    <>
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <ConfirmModal
+              desc={`هل أنت متأكد من حذف القسم "${devisionToDelete?.Description || 'هذا القسم'}"؟`}
+              confirmFunc={handleDelete}
+              onClose={() => {
+                setShowDeleteModal(false);
+                setDevisionToDelete(null);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white rounded-lg p-4">
+        <TablePage
+          data={tableData}
+          columns={columns}
+          totalCount={DevisionCount || 0}
+          fetchApi={fetchApi}
+          isLoading={loading}
+          tableTitle="الأقسام"
+          rowsPerPageDefault={5}
+          AddButtonProps={{
+            title: 'إضافة قسم',
+            path: '/SchoolDevisions/Add',
+          }}
+          actionsConfig={actionsConfig}
+          searchPlaceholder="ابحث باسم القسم..."
+        />
+      </div>
+    </>
   );
 };
 
