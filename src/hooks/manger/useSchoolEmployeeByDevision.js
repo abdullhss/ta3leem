@@ -14,8 +14,8 @@ const useSchoolEmployeeByDepartment = (School_id, Devision_id , type , searchTex
         const response = await executeProcedure("3KsGHxqjEgxDt0LDyQVnP1nXTQdK+7RrktLg1dbdaLLJCDK/WMt0h0Z7uMiG2otL" , `${School_id}#${Devision_id}#${type}#$????#${searchText}#${StartNum}#${Count}`);
         console.log(response);
         
-        setSchoolEmployees(response.decrypted.EmployeeData?JSON.parse(response.decrypted.EmployeeData):[]);
-        setEmployeeCount(response.decrypted.EmployeeCount);
+        setSchoolEmployees(response.decrypted.SchoolEmployeeData?JSON.parse(response.decrypted.SchoolEmployeeData):[]);
+        setEmployeeCount(response.decrypted.SchoolEmployeeCount);
       } catch (err) {
         setError(err);
       } finally {
@@ -24,7 +24,7 @@ const useSchoolEmployeeByDepartment = (School_id, Devision_id , type , searchTex
     };
 
     getSchoolEmployeeByDepartment();
-  }, [school_id, SchoolDepartment_id, searchText]);
+  }, [School_id, Devision_id, searchText]);
 
   return { SchoolEmployees, EmployeeCount, loading, error };
 };

@@ -5,6 +5,8 @@ import { DoTransaction } from '../../services/apiServices';
 import { toast } from 'react-toastify';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useSchoolDepartment from '../../hooks/manger/useSchoolDepartment';
+import useSchoolEmployeeByDepartment from '../../hooks/manger/useSchoolEmployeeByDepartment';
+import useSchoolEmployeeByDevision from '../../hooks/manger/useSchoolEmployeeByDevision';
 
 const AddSchoolDevision = () => {
   const {
@@ -18,20 +20,15 @@ const AddSchoolDevision = () => {
   const location = useLocation();
   
   // Get devision data and action from location state
-  const devisionData = location.state?.devisionData;
+  const devisionData = location.state?.devisionData;  
   const action = location.state?.action || 0; // 0 = add, 1 = edit
   const isEditMode = action === 1;
+  console.log(userData);
+  
   const { SchoolDepartments : departments, loading: loadingDepartments } = useSchoolDepartment(userData?.School_Id || 0, "")
-  console.log(departments);
-
-  const departmentHeads = [
-    { id: 0, name: 'أحمد محمد' },
-    { id: 0, name: 'سارة علي' },
-    { id: 0, name: 'محمد خالد' },
-    { id: 0, name: 'فاطمة عبدالله' },
-    { id: 0, name: 'خالد إبراهيم' }
-  ]
-
+  const { SchoolEmployees } = useSchoolEmployeeByDevision( userData?.School_Id || 0, devisionData?.id || 0, 1, "", 1, 10000)
+  console.log(SchoolEmployees);
+  
   // Populate form when in edit mode
   useEffect(() => {
     if (isEditMode && devisionData) {
@@ -95,7 +92,7 @@ const AddSchoolDevision = () => {
             <label className="font-medium">الإدارة</label>
             <select
               {...register('departmentId', { required: 'اختر الإدارة' })}
-              className="border rounded-md p-3 w-full focus:outline-none focus:ring-2 focus:ring-[#BE8D4A]"
+              className="border rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-[#BE8D4A]"
             >
               <option value="">اختر الإدارة</option>
               {departments.map((dept) => (
@@ -115,12 +112,12 @@ const AddSchoolDevision = () => {
               <label className="font-medium">رئيس القسم المكلف</label>
               <select
                 {...register('headId', { required: 'اختر رئيس القسم المكلف' })}
-                className="border rounded-md p-3 w-full focus:outline-none focus:ring-2 focus:ring-[#BE8D4A]"
+                className="border rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-[#BE8D4A]"
               >
                 <option value="">اختر رئيس القسم المكلف</option>
-                {departmentHeads.map((head) => (
+                {SchoolEmployees.map((head) => (
                   <option key={head.id} value={head.id}>
-                    {head.name}
+                    {head.FullName}
                   </option>
                 ))}
               </select>
