@@ -20,14 +20,12 @@ const SchoolDevisions = () => {
 
   // Pagination calculation
   const startNumber = (currentPage - 1) * rowsPerPage;
-
   // Fetch data via hook
   const { SchoolDevisions, DevisionCount, loading, error } = useSchoolDevision(
     userData.School_Id,
-    startNumber,
+    -1,
     searchText
   );
-
   // Columns for table
   const columns = [
     { uid: 'id', name: 'ID' },

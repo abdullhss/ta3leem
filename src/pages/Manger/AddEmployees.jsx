@@ -207,10 +207,10 @@ const AddEmployees = () => {
   const selectedSubjects = watch("subjects") || []
   const selectedEmployeeType = watch("employeeType")
   const selectedDepartmentId = watch("schoolDepartmentId")
+  const selectedDevisionId = watch("schoolDevisionId")
   
   const { SchoolDepartments, loading: loadingDepartments } = useSchoolDepartment(userData?.School_Id || 0, "")
   const { SchoolDevisions, loading: loadingDevisions } = useSchoolDevision(userData?.School_Id || 0, selectedDepartmentId || 0, "")
-  console.log(SchoolDevisions);
   
   // Reset division when department changes
   useEffect(() => {
@@ -289,7 +289,7 @@ const AddEmployees = () => {
     try {
       const response = await DoTransaction(
         "ps1zVpV4q7/4qh8wV8pzqA==" ,
-        `${0}#${userData.School_Id}#${data.employeeType}#${data.employeeName}#${data.employeeNumber}#${data.phone}#${data.genderId}#${data.email}#${data.loginName}#${data.password}#${data.nationalityId}#${data.nationalId || data.passportNumber}#${data.passportNumber || data.nationalId}#${data.residenceNumber || data.nationalId}#${data.motherName}#${uploadedFiles.national?.id || 0}#${uploadedFiles.passport?.id || 0}#${uploadedFiles.residence?.id || 0}#${residenceExpiryFormatted}#${uploadedFiles.cv?.id || 0}#${uploadedFiles.educationalQualification?.id || 0}#${data.yearsOfExperience}#${selectedSubjects.join(',')}#False#0#default#0#0#default##False###0#${selectedDepartmentId}#${selectedDevisionId}#0#0`, 
+        `${0}#${userData.School_Id}#${data.employeeType}#${data.employeeName}#${data.employeeNumber}#${data.phone}#${data.genderId}#${data.email}#${data.loginName}#${data.password}#${data.nationalityId}#${data.nationalId || data.passportNumber}#${data.passportNumber || data.nationalId}#${data.residenceNumber || data.nationalId}#${data.motherName}#${uploadedFiles.national?.id || 0}#${uploadedFiles.passport?.id || 0}#${uploadedFiles.residence?.id || 0}#${residenceExpiryFormatted}#${uploadedFiles.cv?.id || 0}#${uploadedFiles.educationalQualification?.id || 0}#${data.yearsOfExperience}#${selectedSubjects.join(',')}#False#0#default#0#0#default##False#${selectedDepartmentId}#${selectedDevisionId}#0#0`, 
         0,
         "Id#School_Id#SchoolEmployeeType_Id#FullName#DefinedNum#MobileNum#Gender_Id#Email#LoginName#Password#Nationality_Id#NationalNum#PassportNum#ResidenseNum#MotherName#NationalNumAttach#PassportNumAttach#ResidenseNumAttach#ResidenseEndDate#CVAttach#EducationCertificateAttach#ExperinceYears#EducationMaterialName_Ids#IsSent#SentBy#SentDate#IsApproved#ApprovedBy#ApprovedDate#ApprovedRemarks#IsActive#SchoolDepartment_Id#SchoolDevision_Id#SchoolUserGroup_Id#User_Id"
       )
@@ -803,6 +803,7 @@ const AddEmployees = () => {
                   <select
                     className='border border-gray-300 rounded px-3 py-1'
                     {...register("schoolDevisionId")}
+                    value={selectedDevisionId}
                     disabled={loadingDevisions || !selectedDepartmentId}
                   >
                     <option value="">اختر القسم</option>

@@ -22,7 +22,10 @@ import { DoTransaction } from '../../services/apiServices'
 import { ConfirmModal } from '../../global/global-modal/ConfirmModal'
 import useSchoolStudentDetails from '../../hooks/useSchoolStudentDetails'
 import FileViewer from '../../components/FileViewer'
-
+import useGenderTypeForSchool from '../../hooks/schools/useGenderTypeForSchool'
+import useEducationLevelForSchool from '../../hooks/schools/useEducationLevelForSchool'
+import useEducationClassForSchool from '../../hooks/schools/useEducationClassForSchool'
+import useEducationPeriodForSchool from '../../hooks/schools/useEducationPeriodForSchool'
 // Animation variants
 const fadeIn = {
   initial: { opacity: 0, height: 0 },
@@ -193,9 +196,9 @@ const AddStudents = () => {
   const { nationalities, loading: loadingNationalities } = useNationality()
   const { uploadSingleFile } = useUploadFiles()
   const navigate = useNavigate();
-  const { EducationLevels, loading: loadingEducationLevels } = useEducationLevel()
+  const { EducationLevels, loading: loadingEducationLevels } = useEducationLevelForSchool({school_id: userData.School_Id})
   const { EducationSecondaryLevelTypes, loading: loadingEducationSecondaryLevelTypes } = useEducationSecondaryLevelType()
-  const { EducationClasses, loading: loadingEducationClasses } = useEducationClass()
+  const { EducationClasses, loading: loadingEducationClasses } = useEducationClassForSchool({school_id: userData.School_Id})
   const [selectedEducationalStage, setSelectedEducationalStage] = useState(null)
   const [allowedEducationClasses, setAllowedEducationClasses] = useState([])
   const [allowedSchoolClasses, setAllowedSchoolClasses] = useState([])
@@ -223,11 +226,11 @@ const AddStudents = () => {
 
   
 
-  const {genders , loading: loadingGenders} = useGender() ; 
+  const {GenderTypes:genders , loading: loadingGenderTypes} = useGenderTypeForSchool({school_id: userData.School_Id}) ; 
 
   const { StudentTransStatuses, loading: loadingStudentTransStatuses } = useStudentTransStatus()
   
-  const { EducationPeriods, loading: loadingEducationPeriods } = useEducationPeriod()
+  const { EducationPeriods, loading: loadingEducationPeriods } = useEducationPeriodForSchool({school_id: userData.School_Id})
   const {StudentStatuses, loading: loadingStudentStatuses} = useStudentStatus();
   
 
@@ -629,7 +632,7 @@ const AddStudents = () => {
                           {...register("gender")}
                           className="w-5 h-5 accent-[#BE8D4A]"
                         />
-                      <span>{gender.Name}</span>
+                      <span>{gender.Description}</span>
                     </label>
                   ))
                 }

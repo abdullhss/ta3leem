@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { DoTransaction } from '../../services/apiServices';
 import { toast } from 'react-toastify';
 import { useNavigate, useLocation } from 'react-router-dom';
+import useSchoolEmployeeByDepartment from '../../hooks/manger/useSchoolEmployeeByDepartment';
 
 const AddDepartmentForm = () => {
   const {
@@ -23,29 +24,49 @@ const AddDepartmentForm = () => {
   const departmentData = location.state?.departmentData;
   const action = location.state?.action || 0; // 0 = add, 1 = edit
   const isEditMode = action === 1;
-  const onSubmit = async(data) => {
-    const departmentId = isEditMode ? (departmentData?.id || departmentData?.Id || 0) : 0;
+  console.log(departmentData);
+  const { SchoolEmployees, EmployeeCount, loading, error } = useSchoolEmployeeByDepartment(
+    userData.School_Id,
+    departmentData?.id,
+    1,
+    "",
+    1,
+    10000
+  );
+  console.log(SchoolEmployees);
+
+  const onSubmit = async (data) => {
+    const departmentId = isEditMode
+      ? (departmentData?.id || departmentData?.Id || 0)
+      : 0;
+  
+    const managerId = isEditMode ? data.managerId : 0;
+  
     const response = await DoTransaction(
       "ZIFEL17gLyWFPeaISNh4ydM8cDH8xmOCbmJhCEciZ/o=",
-      `${departmentId}#${data.departmentName}#${data.managerId}#${userData.School_Id}`,
-      action, // 0 = add, 1 = edit, 2 = delete
+      `${departmentId}#${data.departmentName}#${managerId}#${userData.School_Id}`,
+      action,
       "Id#Description#SchoolEmployee_Id#School_id"
     );
-    console.log(response);
-    if(response.success != 200){
+  
+    if (response.success != 200) {
       toast.error(response.errorMessage || (isEditMode ? "فشل التعديل" : "فشل العملية"));
-    }else{
+    } else {
       toast.success(isEditMode ? "تم تعديل الإدارة بنجاح" : "تم إضافة الإدارة بنجاح");
       navigate("/Departments");
     }
   };
-
-  // المديرين المكلفين (Static Options)
-  const managers = [
-    { id: 0, name: 'أحمد علي' },
-    { id: 0, name: 'محمود حسن' },
-    { id: 0, name: 'سارة محمد' },
-  ];
+  
+  useEffect(() => {
+    if (isEditMode && departmentData) {
+      setValue('departmentName', departmentData.Description || '');
+      setValue('managerId', departmentData.SchoolEmployee_Id || '');
+    }
+  
+    if (!isEditMode) {
+      setValue('managerId', 0);
+    }
+  }, [isEditMode, departmentData, setValue]);
 
   // Populate form when in edit mode
   useEffect(() => {
@@ -65,7 +86,7 @@ const AddDepartmentForm = () => {
         
         <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
           {/* اسم الإدارة */}
-          <div className="flex flex-col gap-2">
+          <div className={`flex flex-col gap-2 ${isEditMode ? '' : 'col-span-2'}`}>
             <label>اسم الإدارة</label>
             <input
               {...register('departmentName', { required: 'هذا الحقل مطلوب' })}
@@ -78,23 +99,26 @@ const AddDepartmentForm = () => {
           </div>
 
           {/* المدير المكلف */}
-          <div className="flex flex-col gap-2">
-            <label>المدير المكلف</label>
-            <select
-              {...register('managerId', { required: 'اختر المدير المكلف' })}
-              className="border rounded-md p-2 w-full"
-            >
-              <option value="">اختر المدير المكلف</option>
-              {managers.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name}
-                </option>
-              ))}
-            </select>
-            {errors.managerId && (
-              <p className="text-red-500 text-sm">{errors.managerId.message}</p>
-            )}
-          </div>
+          {isEditMode && (
+            <div className="flex flex-col gap-2">
+              <label>المدير المكلف</label>
+              <select
+                {...register('managerId', { required: 'اختر المدير المكلف' })}
+                className="border rounded-md p-2 w-full"
+              >
+                <option value="">اختر المدير المكلف</option>
+                {SchoolEmployees.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.FullName}
+                  </option>
+                ))}
+              </select>
+              {errors.managerId && (
+                <p className="text-red-500 text-sm">{errors.managerId.message}</p>
+              )}
+            </div>
+          )}
+
         </div>
 
         {/* Buttons */}

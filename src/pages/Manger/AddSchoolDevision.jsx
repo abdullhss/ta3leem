@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { DoTransaction } from '../../services/apiServices';
 import { toast } from 'react-toastify';
 import { useNavigate, useLocation } from 'react-router-dom';
+import useSchoolDepartment from '../../hooks/manger/useSchoolDepartment';
 
 const AddSchoolDevision = () => {
   const {
@@ -20,13 +21,8 @@ const AddSchoolDevision = () => {
   const devisionData = location.state?.devisionData;
   const action = location.state?.action || 0; // 0 = add, 1 = edit
   const isEditMode = action === 1;
-  const departments = [
-    { id: 0, name: 'إدارة التعليم الابتدائي' },
-    { id: 0, name: 'إدارة التعليم الثانوي' },
-    { id: 0 , name: 'إدارة التعليم الخاص' },
-    { id: 0, name: 'إدارة المناهج' },
-    { id: 0, name: 'إدارة التدريب' }
-  ]
+  const { SchoolDepartments : departments, loading: loadingDepartments } = useSchoolDepartment(userData?.School_Id || 0, "")
+  console.log(departments);
 
   const departmentHeads = [
     { id: 0, name: 'أحمد محمد' },
@@ -43,25 +39,35 @@ const AddSchoolDevision = () => {
       setValue('departmentId', devisionData.SchoolDepartment_Id || '');
       setValue('headId', devisionData.SchoolEmployee_Id || '');
     }
+  
+    if (!isEditMode) {
+      setValue('headId', 0);
+    }
   }, [isEditMode, devisionData, setValue]);
+  
 
   const onSubmit = async (data) => {
-    const devisionId = isEditMode ? (devisionData?.id || devisionData?.Id || 0) : 0;
+    const devisionId = isEditMode
+      ? (devisionData?.id || devisionData?.Id || 0)
+      : 0;
+  
+    const headId = isEditMode ? data.headId : 0;
+  
     const response = await DoTransaction(
       "SI2sCeLI3BHIzngEXxosAg==",
-      `${devisionId}#${data.divisionName}#${data.departmentId}#${data.headId}#${userData.School_Id}`,
-      action, // 0 = add, 1 = edit, 2 = delete
+      `${devisionId}#${data.divisionName}#${data.departmentId}#${headId}#${userData.School_Id}`,
+      action,
       "Id#Description#SchoolDepartment_Id#SchoolEmployee_Id#School_id"
     );
-    console.log(response);
-    if(response.success != 200){
+  
+    if (response.success != 200) {
       toast.error(response.errorMessage || (isEditMode ? "فشل التعديل" : "فشل العملية"));
-    }else{
+    } else {
       toast.success(isEditMode ? "تم تعديل القسم بنجاح" : "تم إضافة القسم بنجاح");
       navigate("/SchoolDevisions");
     }
-  }
-
+  };
+  
   return (
     <div className="p-6">
       <form
@@ -94,7 +100,7 @@ const AddSchoolDevision = () => {
               <option value="">اختر الإدارة</option>
               {departments.map((dept) => (
                 <option key={dept.id} value={dept.id}>
-                  {dept.name}
+                  {dept.Description}
                 </option>
               ))}
             </select>
@@ -104,23 +110,26 @@ const AddSchoolDevision = () => {
           </div>
 
           {/* رئيس القسم المكلف - col-span-2 */}
-          <div className="flex flex-col gap-2 md:col-span-2">
-            <label className="font-medium">رئيس القسم المكلف</label>
-            <select
-              {...register('headId', { required: 'اختر رئيس القسم المكلف' })}
-              className="border rounded-md p-3 w-full focus:outline-none focus:ring-2 focus:ring-[#BE8D4A]"
-            >
-              <option value="">اختر رئيس القسم المكلف</option>
-              {departmentHeads.map((head) => (
-                <option key={head.id} value={head.id}>
-                  {head.name}
-                </option>
-              ))}
-            </select>
-            {errors.headId && (
-              <p className="text-red-500 text-sm mt-1">{errors.headId.message}</p>
-            )}
-          </div>
+          {isEditMode && (
+            <div className="flex flex-col gap-2 md:col-span-2">
+              <label className="font-medium">رئيس القسم المكلف</label>
+              <select
+                {...register('headId', { required: 'اختر رئيس القسم المكلف' })}
+                className="border rounded-md p-3 w-full focus:outline-none focus:ring-2 focus:ring-[#BE8D4A]"
+              >
+                <option value="">اختر رئيس القسم المكلف</option>
+                {departmentHeads.map((head) => (
+                  <option key={head.id} value={head.id}>
+                    {head.name}
+                  </option>
+                ))}
+              </select>
+              {errors.headId && (
+                <p className="text-red-500 text-sm mt-1">{errors.headId.message}</p>
+              )}
+            </div>
+          )}
+
         </div>
 
         {/* Buttons */}
