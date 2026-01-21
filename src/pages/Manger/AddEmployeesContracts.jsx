@@ -159,8 +159,7 @@ const AddEmployeesContracts = () => {
     const response = await DoTransaction(
       "c59NIefQBJxKsiG5dAyiA9KxL8NZL7mFlQjJrzLC83c=", // Replace with actual code
       `${0}#${jobTitleName}`,
-      0,
-      "Id#Desription"
+      0
     )
     console.log(response);
     
