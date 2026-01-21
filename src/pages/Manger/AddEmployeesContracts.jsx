@@ -55,7 +55,6 @@ const AddEmployeesContracts = () => {
   )
   
   const { SchoolJobTitles: jobTitles, loading: loadingJobTitles } = useSchoolJobTitle() ;
-  console.log(jobTitles);
   
   // Populate form when in edit mode
   useEffect(() => {
@@ -204,7 +203,7 @@ const AddEmployeesContracts = () => {
       toast.error(response.errorMessage || (isEditMode ? "فشل التعديل" : "فشل العملية"))
     } else {
       toast.success(isEditMode ? "تم تعديل العقد بنجاح" : "تم إضافة العقد بنجاح")
-      navigate("/EmployeesContracts") // Adjust route as needed
+      // navigate("/EmployeesContracts") // Adjust route as needed
     }
   }
   
@@ -286,8 +285,8 @@ const AddEmployeesContracts = () => {
               >
                 <option value="">اختر الصفة الوظيفية</option>
                 {jobTitles.map((job) => (
-                  <option key={job.id} value={job.id}>
-                    {job.Description}
+                  <option key={job.Id} value={job.Id}>
+                    {job.Desription}
                   </option>
                 ))}
               </select>

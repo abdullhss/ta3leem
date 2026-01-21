@@ -13,7 +13,7 @@ const useSchoolJobTitle = (searchText = "") => {
         const response = await executeProcedure("3KsGHxqjEgxDt0LDyQVnPzVj0Zq5EjVFRE9fNhEQpp0=" , `${searchText}`);
         console.log(response);
         
-        setSchoolJobTitles(response.decrypted.SchoolJobTitleData?JSON.parse(response.decrypted.SchoolJobTitleData):[]);
+        setSchoolJobTitles(response.decrypted.JobDescriptionData?JSON.parse(response.decrypted.JobDescriptionData):[]);
       } catch (err) {
         setError(err);
       } finally {
