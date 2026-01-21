@@ -307,7 +307,7 @@ const AddEmployees = () => {
 
   const handleAddContracts = () => {
     // Navigate to contracts page or open modal
-    toast.info("سيتم الانتقال إلى صفحة إضافة العقود")
+    navigate("/Employees/Contracts/Add")
   }
 
   return (
