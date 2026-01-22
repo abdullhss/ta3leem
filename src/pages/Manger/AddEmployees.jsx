@@ -290,7 +290,7 @@ const AddEmployees = () => {
       const response = await DoTransaction(
         "ps1zVpV4q7/4qh8wV8pzqA==" ,
         `${0}#${userData.School_Id}#${data.employeeType}#${data.employeeName}#${data.employeeNumber}#${data.phone}#${data.genderId}#${data.email}#${data.loginName}#${data.password}#${data.nationalityId}#${data.nationalId || data.passportNumber}#${data.passportNumber || data.nationalId}#${data.residenceNumber || data.nationalId}#${data.motherName}#${uploadedFiles.national?.id || 0}#${uploadedFiles.passport?.id || 0}#${uploadedFiles.residence?.id || 0}#${residenceExpiryFormatted}#${uploadedFiles.cv?.id || 0}#${uploadedFiles.educationalQualification?.id || 0}#${data.yearsOfExperience}#${selectedSubjects.join(',')}#False#0#default#0#0#default##False#${selectedDepartmentId}#${selectedDevisionId}#0#0`, 
-        0,
+        0, // 0 add , 1 edit , 2 delete
         "Id#School_Id#SchoolEmployeeType_Id#FullName#DefinedNum#MobileNum#Gender_Id#Email#LoginName#Password#Nationality_Id#NationalNum#PassportNum#ResidenseNum#MotherName#NationalNumAttach#PassportNumAttach#ResidenseNumAttach#ResidenseEndDate#CVAttach#EducationCertificateAttach#ExperinceYears#EducationMaterialName_Ids#IsSent#SentBy#SentDate#IsApproved#ApprovedBy#ApprovedDate#ApprovedRemarks#IsActive#SchoolDepartment_Id#SchoolDevision_Id#SchoolUserGroup_Id#User_Id"
       )
       if(response.success !== 200){
