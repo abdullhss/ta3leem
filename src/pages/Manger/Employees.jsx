@@ -1,13 +1,14 @@
-import React, { useState, useEffect, act } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { toast } from "react-toastify";
 import TablePage from '../../components/TablePage';
 import useSchoolEmployees from '../../hooks/schools/useSchoolsEmployees';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../../ui/dialog';
 import { Button } from '../../ui/button';
 import useSchoolEmployeeForSent from '../../hooks/manger/useSchoolEmployeeForSent';
 import { Checkbox } from '../../ui/checkbox';
+
 const Employees = () => {
   const userData = useSelector((state) => state.auth.userData);
   const navigate = useNavigate();
@@ -20,9 +21,11 @@ const Employees = () => {
   const [showSendToReviewModal, setShowSendToReviewModal] = useState(false);
   const [currentPageForSent, setCurrentPageForSent] = useState(1);
   const [rowsPerPageForSent, setRowsPerPageForSent] = useState(5);
+  const [selectedEmployees, setSelectedEmployees] = useState([]); // State for checked employees
   const startNumberForSent = (currentPageForSent - 1) * rowsPerPageForSent + 1;
   
   const { SchoolEmployees: SchoolEmployeesForSent, EmployeeCount: EmployeeCountForSent, loading: loadingForSent, error: errorForSent } = useSchoolEmployeeForSent(userData.School_Id, -1, searchText, startNumberForSent, rowsPerPageForSent);
+  
   // Calculate startNumber for pagination (1-indexed starting record number)
   const startNumber = (currentPage - 1) * rowsPerPage + 1;
   
@@ -59,9 +62,6 @@ const Employees = () => {
     // Update pagination
     setCurrentPage(page);
     setRowsPerPage(rowsPerPageValue);
-    
-    // Note: The hook will automatically refetch when these state values change
-    // Data will be updated via the useEffect below
   };
 
   // Update table data when employees data changes
@@ -79,11 +79,60 @@ const Employees = () => {
     }
   }, [error]);
 
+  // Reset selected employees when modal opens/closes
+  useEffect(() => {
+    if (showSendToReviewModal) {
+      setSelectedEmployees([]);
+    }
+  }, [showSendToReviewModal]);
+
+  // Handle checkbox change for employee selection
+  const handleEmployeeSelect = (employeeId, isChecked) => {
+    if (isChecked) {
+      // Add employee to selected array
+      setSelectedEmployees(prev => [...prev, employeeId]);
+    } else {
+      // Remove employee from selected array
+      setSelectedEmployees(prev => prev.filter(id => id !== employeeId));
+    }
+  };
+
+  // Handle "Select All" functionality
+  const handleSelectAll = (isChecked) => {
+    if (isChecked && SchoolEmployeesForSent) {
+      // Select all employee IDs
+      const allIds = SchoolEmployeesForSent.map(employee => employee.id);
+      setSelectedEmployees(allIds);
+    } else {
+      // Clear all selections
+      setSelectedEmployees([]);
+    }
+  };
+
+  // Handle send button click
+  const handleSendToReview = () => {
+    console.log('Selected employees for review:', selectedEmployees);
+    
+    // Here you can add your API call to send selected employees
+    // Example API call:
+    // sendEmployeesToReview(selectedEmployees).then(() => {
+    //   toast.success("تم إرسال الموظفين إلى المراجعة بنجاح");
+    //   setShowSendToReviewModal(false);
+    // }).catch(error => {
+    //   toast.error("حدث خطأ أثناء إرسال الموظفين");
+    // });
+    
+    // For now, just log and show a message
+    toast.info(`تم تحديد ${selectedEmployees.length} موظف لإرساله للمراجعة`);
+    console.log('Selected employee IDs:', selectedEmployees);
+    
+    // Close the modal
+    setShowSendToReviewModal(false);
+  };
+
   // Check if employee can be edited or deleted based on status
   const canEditOrDelete = (employee) => {
-    // Add your logic here based on employee status
-    // For example, if IsApproved is 0 or IsActive is true/false
-    return employee.IsApproved === 0; // Example: Can edit if not approved yet
+    return employee.IsApproved === 0;
   };
 
   // Actions configuration
@@ -137,12 +186,27 @@ const Employees = () => {
     { uid: 'Nationality_Name', name: 'الجنسية' },
     { uid: 'actions', name: 'الإجراءات' },
   ];
+  
+  // Modified columns for modal table with select checkbox
   const columnsForSent = [
+    { 
+      uid: 'select', 
+      name: (
+        <div className="flex items-center">
+          <Checkbox
+            checked={SchoolEmployeesForSent && selectedEmployees.length === SchoolEmployeesForSent.length}
+            onCheckedChange={handleSelectAll}
+            className="ml-2 mx-4"
+          />
+          اختر الكل
+        </div>
+      )
+    },
     { uid: 'id', name: 'ID' },
     { uid: 'FullName', name: 'الاسم الكامل' },
     { uid: 'MobileNum', name: 'رقم الهاتف' },
-    { uid: 'IsApproved', name: 'الحالة' },
   ];
+
   return (
     <div className='bg-white rounded-lg p-4'>
       <TablePage
@@ -179,6 +243,7 @@ const Employees = () => {
         errorMessage={error ? "فشل في تحميل بيانات الموظفين" : null}
         noDataMessage="لا توجد موظفين"
       />
+      
       <Dialog open={showSendToReviewModal} onOpenChange={setShowSendToReviewModal}>
         <DialogContent className="w-full max-w-3xl">
           <DialogHeader>
@@ -195,17 +260,62 @@ const Employees = () => {
               onDoubleClick={false}
               specialCells={[
                 {
+                  key: 'select',
+                  render: (param , item) => {
+                    console.log(item);
+                    
+                    return (
+                      <Checkbox 
+                        checked={selectedEmployees.includes(item.id)}
+                        onCheckedChange={(checked) => {
+                          handleEmployeeSelect(item.id, checked);
+                        }}
+                        className="w-4 h-4 mx-4"
+                      />
+                    );
+                  },
+                },
+                {
                   key: 'IsApproved',
                   render: (item) => {
-                    return <Checkbox checked={item.IsApproved} className="w-4 h-4" />;
+                    // You can customize this based on your actual IsApproved values
+                    const statusText = item.IsApproved === 1 ? 'مقبول' : 
+                                      item.IsApproved === 0 ? 'قيد المراجعة' : 
+                                      item.IsApproved === -1 ? 'مرفوض' : 'غير معروف';
+                    
+                    const statusColor = item.IsApproved === 1 ? 'text-green-600' : 
+                                       item.IsApproved === 0 ? 'text-yellow-600' : 
+                                       item.IsApproved === -1 ? 'text-red-600' : 'text-gray-600';
+                    
+                    return (
+                      <span className={`font-medium ${statusColor}`}>
+                        {statusText}
+                      </span>
+                    );
                   },
                 }
               ]}
             />
           </div>
-          <DialogFooter className={"w-full flex items-center gap-4"}>
-            <Button className="w-full" onClick={() => {}}>إرسال</Button>
-            <Button className="w-full text-red-500 bg-white border border-red-500 hover:bg-red-600 hover:text-white" onClick={() => setShowSendToReviewModal(false)}>إلغاء</Button>
+          <div className="mt-4 text-right">
+            <p className="text-sm text-gray-600">
+              تم اختيار {selectedEmployees.length} من أصل {SchoolEmployeesForSent?.length || 0} موظف
+            </p>
+          </div>
+          <DialogFooter className="w-full flex items-center gap-4">
+            <Button 
+              className="w-full" 
+              onClick={handleSendToReview}
+              disabled={selectedEmployees.length === 0}
+            >
+              إرسال ({selectedEmployees.length})
+            </Button>
+            <Button 
+              className="w-full text-red-500 bg-white border border-red-500 hover:bg-red-600 hover:text-white" 
+              onClick={() => setShowSendToReviewModal(false)}
+            >
+              إلغاء
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
