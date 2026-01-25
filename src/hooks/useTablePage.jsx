@@ -44,7 +44,7 @@ export const useTable = ({
   specialCells,
   fetchApi,
   openModal,
-  AddButtonProps: { title, path, action , state} = {},
+  AddButtonProps,
   filters,
   showOfficeFilter,
   rowsPerPageDefault = 5,
@@ -78,6 +78,14 @@ export const useTable = ({
     column: 'id',
     direction: 'descending',
   });
+
+  const addButtons = useMemo(() => {
+  if (!AddButtonProps) return [];
+
+  if (Array.isArray(AddButtonProps)) return AddButtonProps;
+
+  return [AddButtonProps];
+}, [AddButtonProps]);
 
   const getCleanedFilters = (filters) => {
     const cleaned = {};
@@ -164,19 +172,26 @@ export const useTable = ({
         {tableTitle && (
           <h1 className="text-xl font-bold ">{tableTitle}</h1>
         )}
-        {title && (
-          <Button 
-            className='p-2! bg-transparent min-w-max flex items-center gap-2 text-bold text-base hover:bg-transparent cursor-pointer text-dark' 
-            onClick={() => {
-              action && action?.()
-              path && navigate(path , { state: state })
-            }}
-          >
-            <PlusIcon height={30} width={30} className="text-primary"/>
-            {title}
-          </Button>
+        {addButtons.length > 0 && (
+          <div className="flex gap-2 flex-wrap">
+            {addButtons.map((btn, index) => (
+              <Button
+                key={index}
+                className={`p-2! bg-transparent min-w-max flex items-center gap-2 text-bold text-base hover:bg-transparent cursor-pointer text-dark ${btn.className || ''}`}
+                onClick={() => {
+                  btn?.action && btn.action();
+                  btn?.path && navigate(btn.path, { state: btn?.state });
+                }}
+              >
+                {!btn.noPlusIcon &&
+                  <PlusIcon height={30} width={30} className="text-primary" />
+                }
+                {btn?.title}
+              </Button>
+            ))}
+          </div>
         )}
-        {!tableTitle && !title && <div></div>}
+        {!tableTitle && addButtons.length === 0 && <div></div>}
       </div>
 
       {/* Second Row: Filters (start) and Search (end) - Responsive with wrapping */}
@@ -341,7 +356,7 @@ export const useTable = ({
         </div>
       </div>
     </div>
-  ), [isFilteredByDate, t, formInfo, exportAsExcel, loading, searchValue, onClear, showOfficeFilter, filterState, OfficeTypeOptions, filters, title, tableTitle, topContentExtraData, handelDateChange, fetchApi, rowsPerPage, onSearchChange, setSelectedRowsData, action, path, navigate]);
+  ), [isFilteredByDate, t, formInfo, exportAsExcel, loading, searchValue, onClear, showOfficeFilter, filterState, OfficeTypeOptions, filters, AddButtonProps, tableTitle, topContentExtraData, handelDateChange, fetchApi, rowsPerPage, onSearchChange, setSelectedRowsData, navigate]);
 
   const handlePageChange = useCallback((newPage) => {
     setPage(newPage);

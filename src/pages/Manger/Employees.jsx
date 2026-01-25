@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, act } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { toast } from "react-toastify";
 import TablePage from '../../components/TablePage';
 import useSchoolEmployees from '../../hooks/schools/useSchoolsEmployees';
-
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../ui/dialog';
+import { Button } from '../../ui/button';
+import useSchoolEmployeeForSent from '../../hooks/manger/useSchoolEmployeeForSent';
+import { Checkbox } from '../../ui/checkbox';
 const Employees = () => {
   const userData = useSelector((state) => state.auth.userData);
   const navigate = useNavigate();
@@ -14,6 +17,12 @@ const Employees = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   
+  const [showSendToReviewModal, setShowSendToReviewModal] = useState(false);
+  const [currentPageForSent, setCurrentPageForSent] = useState(1);
+  const [rowsPerPageForSent, setRowsPerPageForSent] = useState(5);
+  const startNumberForSent = (currentPageForSent - 1) * rowsPerPageForSent + 1;
+  
+  const { SchoolEmployees: SchoolEmployeesForSent, EmployeeCount: EmployeeCountForSent, loading: loadingForSent, error: errorForSent } = useSchoolEmployeeForSent(userData.School_Id, -1, searchText, startNumberForSent, rowsPerPageForSent);
   // Calculate startNumber for pagination (1-indexed starting record number)
   const startNumber = (currentPage - 1) * rowsPerPage + 1;
   
@@ -128,7 +137,12 @@ const Employees = () => {
     { uid: 'Nationality_Name', name: 'الجنسية' },
     { uid: 'actions', name: 'الإجراءات' },
   ];
-
+  const columnsForSent = [
+    { uid: 'id', name: 'ID' },
+    { uid: 'FullName', name: 'الاسم الكامل' },
+    { uid: 'MobileNum', name: 'رقم الهاتف' },
+    { uid: 'IsApproved', name: 'الحالة' },
+  ];
   return (
     <div className='bg-white rounded-lg p-4'>
       <TablePage
@@ -142,15 +156,59 @@ const Employees = () => {
         clickable={true}
         tableTitle={"إدارة الكوادر"}
         isHeaderSticky={true}
-        AddButtonProps={{ 
-          title: "إضافة موظف جديد", 
-          path: "/Employees/Add" 
-        }}
+        AddButtonProps={[
+          { 
+            title: "إضافة موظف جديد", 
+            path: "/Employees/Add" 
+          },
+          { 
+            title: "إضافة عقد للموظف", 
+            path: "/Employees/Contracts/Add" 
+          },
+          { 
+            title: "إرسال الكوادر لمكتب المراجعة", 
+            action: () => {
+              setShowSendToReviewModal(true);
+            }, 
+            className : "bg-[#BE8D4A] text-white hover:bg-[#BE8D4A]/90" ,
+            noPlusIcon: true
+          },
+        ]}
         actionsConfig={actionsConfig}
         searchPlaceholder="ابحث باسم الموظف أو البريد الإلكتروني..."
         errorMessage={error ? "فشل في تحميل بيانات الموظفين" : null}
         noDataMessage="لا توجد موظفين"
       />
+      <Dialog open={showSendToReviewModal} onOpenChange={setShowSendToReviewModal}>
+        <DialogContent className="w-full max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-right">إرسال الكوادر لمكتب المراجعة</DialogTitle>
+          </DialogHeader>
+          <div className='overflow-x-auto'>
+            <TablePage
+              data={SchoolEmployeesForSent}
+              columns={columnsForSent}
+              total={Number(EmployeeCountForSent)}
+              isLoading={loadingForSent}
+              isFilteredByDate={false}
+              rowsPerPageDefault={5}
+              onDoubleClick={false}
+              specialCells={[
+                {
+                  key: 'IsApproved',
+                  render: (item) => {
+                    return <Checkbox checked={item.IsApproved} className="w-4 h-4" />;
+                  },
+                }
+              ]}
+            />
+          </div>
+          <DialogFooter className={"w-full flex items-center gap-4"}>
+            <Button className="w-full" onClick={() => {}}>إرسال</Button>
+            <Button className="w-full text-red-500 bg-white border border-red-500 hover:bg-red-600 hover:text-white" onClick={() => setShowSendToReviewModal(false)}>إلغاء</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
