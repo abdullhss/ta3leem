@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Button } from '../../ui/button';
 import useSchoolEmployeeForSent from '../../hooks/manger/useSchoolEmployeeForSent';
 import { Checkbox } from '../../ui/checkbox';
+import { DoTransaction } from '@/services/apiServices';
 
 const Employees = () => {
   const userData = useSelector((state) => state.auth.userData);
@@ -24,7 +25,7 @@ const Employees = () => {
   const [selectedEmployees, setSelectedEmployees] = useState([]); // State for checked employees
   const startNumberForSent = (currentPageForSent - 1) * rowsPerPageForSent + 1;
   
-  const { SchoolEmployees: SchoolEmployeesForSent, EmployeeCount: EmployeeCountForSent, loading: loadingForSent, error: errorForSent } = useSchoolEmployeeForSent(userData.School_Id, -1, searchText, startNumberForSent, rowsPerPageForSent);
+  const { SchoolEmployees: SchoolEmployeesForSent, EmployeeCount: EmployeeCountForSent, loading: loadingForSent, error: errorForSent, refreshKeyForSent, setRefreshKeyForSent } = useSchoolEmployeeForSent(userData.School_Id, -1, searchText, startNumberForSent, rowsPerPageForSent);
   
   // Calculate startNumber for pagination (1-indexed starting record number)
   const startNumber = (currentPage - 1) * rowsPerPage + 1;
@@ -111,22 +112,8 @@ const Employees = () => {
 
   // Handle send button click
   const handleSendToReview = () => {
-    console.log('Selected employees for review:', selectedEmployees);
-    
-    // Here you can add your API call to send selected employees
-    // Example API call:
-    // sendEmployeesToReview(selectedEmployees).then(() => {
-    //   toast.success("تم إرسال الموظفين إلى المراجعة بنجاح");
-    //   setShowSendToReviewModal(false);
-    // }).catch(error => {
-    //   toast.error("حدث خطأ أثناء إرسال الموظفين");
-    // });
-    
-    // For now, just log and show a message
-    toast.info(`تم تحديد ${selectedEmployees.length} موظف لإرساله للمراجعة`);
-    console.log('Selected employee IDs:', selectedEmployees);
-    
     // Close the modal
+    sendEmployeesToReview(selectedEmployees);
     setShowSendToReviewModal(false);
   };
 
@@ -206,6 +193,23 @@ const Employees = () => {
     { uid: 'FullName', name: 'الاسم الكامل' },
     { uid: 'MobileNum', name: 'رقم الهاتف' },
   ];
+
+  const sendEmployeesToReview = async (IdsArray) => {
+    IdsArray.map(async (empid)=>{
+      const response = await DoTransaction(
+        "ps1zVpV4q7/4qh8wV8pzqA==",
+        `${empid}#True#${userData.id}#default`,
+        1,
+        "Id#IsSent#SentBy#SentDate"
+      );
+      if(response.success != 200){
+        toast.error(response.errorMessage || "فشل إرسال الكوادر لمكتب المراجعة");
+        return;
+      }
+      toast.success("تم إرسال الكوادر لمكتب المراجعة بنجاح");
+      setRefreshKeyForSent(refreshKeyForSent + 1);
+    })
+  }
 
   return (
     <div className='bg-white rounded-lg p-4'>

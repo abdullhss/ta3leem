@@ -6,6 +6,7 @@ const useSchoolEmployeeForSent = (School_id, type, value, StartNum, Count) => {
   const [EmployeeCount, setEmployeeCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refreshKeyForSent, setRefreshKeyForSent] = useState(0);
   
   useEffect(() => {
     const getSchoolEmployeeForSent = async () => {
@@ -23,9 +24,9 @@ const useSchoolEmployeeForSent = (School_id, type, value, StartNum, Count) => {
     };
 
     getSchoolEmployeeForSent();
-  }, [School_id, type, value, StartNum, Count]);
+  }, [School_id, type, value, StartNum, Count, refreshKeyForSent]);
 
-  return { SchoolEmployees, EmployeeCount, loading, error };
+  return { SchoolEmployees, EmployeeCount, loading, error, refreshKeyForSent, setRefreshKeyForSent };
 };
 
 export default useSchoolEmployeeForSent;

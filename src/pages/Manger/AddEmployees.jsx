@@ -507,22 +507,43 @@ const AddEmployees = () => {
       <div className='w-full relative mt-8 pb-8 p-6 bg-white rounded-lg'>
         {/* Header */}
         <div className="flex items-center font-bold gap-2 mb-6">
-          <span className="bg-black rounded-md flex-shrink-0 cursor-pointer" onClick={() => navigate("/Employees")}>
+          <span 
+            className="bg-black rounded-md flex-shrink-0 cursor-pointer" 
+            onClick={() => navigate("/Employees")}
+          >
             <ChevronRight className="text-white" height={20} width={20}/>
           </span>
           <h1 className='text-xl font-bold'>{getFormTitle()}</h1>
         </div>
-
-        {isDeleteMode && (
-          <div className="text-center py-8">
-            <p className="text-lg text-gray-700 mb-4">
-              هل أنت متأكد من حذف الموظف <strong>"{employeeData?.FullName || 'هذا الموظف'}"</strong>؟
-            </p>
-            <p className="text-sm text-gray-500">لا يمكن التراجع عن هذا الإجراء</p>
-          </div>
-        )}
-
-        {!isDeleteMode && (
+  
+        {isDeleteMode ? (
+          <>
+            <div className="text-center py-8">
+              <p className="text-lg text-gray-700 mb-4">
+                هل أنت متأكد من حذف الموظف <strong>"{employeeData?.FullName || 'هذا الموظف'}"</strong>؟
+              </p>
+              <p className="text-sm text-gray-500">لا يمكن التراجع عن هذا الإجراء</p>
+            </div>
+            
+            <div className="flex flex-col md:flex-row gap-4 mt-10">
+              <button
+                type="button"
+                onClick={() => navigate("/Employees")}
+                className="flex-1 border border-red-500 text-red-500 py-3 rounded text-lg font-semibold"
+              >
+                إلغاء
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(true)}
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded text-lg font-semibold"
+              >
+                حذف
+              </button>
+            </div>
+          </>
+        ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="mt-10">
             <div className='mt-10 grid grid-cols-1 md:grid-cols-2 gap-6'>
               {/* نوع الموظف */}
@@ -544,7 +565,7 @@ const AddEmployees = () => {
                   <span className="text-red-500 text-sm mt-1">{errors.employeeType.message}</span>
                 )}
               </div>
-
+  
               {/* اسم الموظف */}
               <div className='flex flex-col'>
                 <label className='mb-1 font-semibold'>اسم الموظف</label>
@@ -559,7 +580,7 @@ const AddEmployees = () => {
                   <span className="text-red-500 text-sm mt-1">{errors.employeeName.message}</span>
                 )}
               </div>
-
+  
               {/* رقم الموظف */}
               <div className='flex flex-col'>
                 <label className='mb-1 font-semibold'>رقم الموظف</label>
@@ -574,7 +595,7 @@ const AddEmployees = () => {
                   <span className="text-red-500 text-sm mt-1">{errors.employeeNumber.message}</span>
                 )}
               </div>
-
+  
               {/* الجنس */}
               <div className='flex flex-col'>
                 <label className='mb-1 font-semibold'>الجنس</label>
@@ -594,7 +615,7 @@ const AddEmployees = () => {
                   <span className="text-red-500 text-sm mt-1">{errors.genderId.message}</span>
                 )}
               </div>
-
+  
               {/* رقم الهاتف */}
               <div className='flex flex-col'>
                 <label className='mb-1 font-semibold'>رقم الهاتف</label>
@@ -609,7 +630,7 @@ const AddEmployees = () => {
                   <span className="text-red-500 text-sm mt-1">{errors.phone.message}</span>
                 )}
               </div>
-
+  
               {/* البريد الإلكتروني */}
               <div className='flex flex-col'>
                 <label className='mb-1 font-semibold'>البريد الإلكتروني</label>
@@ -624,7 +645,7 @@ const AddEmployees = () => {
                   <span className="text-red-500 text-sm mt-1">{errors.email.message}</span>
                 )}
               </div>
-
+  
               {/* اسم المستخدم - Only show in Add mode */}
               {isAddMode && (
                 <div className='flex flex-col'>
@@ -640,7 +661,7 @@ const AddEmployees = () => {
                   )}
                 </div>
               )}
-
+  
               {/* كلمة المرور - Only show in Add mode */}
               {isAddMode && (
                 <div className='flex flex-col'>
@@ -656,7 +677,7 @@ const AddEmployees = () => {
                   )}
                 </div>
               )}
-
+  
               {/* تأكيد كلمة المرور - Only show in Add mode */}
               {isAddMode && (
                 <div className='flex flex-col'>
@@ -672,7 +693,7 @@ const AddEmployees = () => {
                   )}
                 </div>
               )}
-
+  
               {/* الجنسية */}
               <div className='flex flex-col'>
                 <label className='mb-1 font-semibold'>الجنسية</label>
@@ -692,7 +713,7 @@ const AddEmployees = () => {
                   <span className="text-red-500 text-sm mt-1">{errors.nationalityId.message}</span>
                 )}
               </div>
-
+  
               {/* الليبي - الرقم الوطني */}
               <AnimatePresence>
                 {selectedNationality === "1" && (
@@ -717,7 +738,7 @@ const AddEmployees = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
-
+  
               {/* الليبي - مرفق الرقم الوطني */}
               <AnimatePresence>
                 {selectedNationality === "1" && (
@@ -757,7 +778,7 @@ const AddEmployees = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
-
+  
               {/* غير الليبي - رقم جواز السفر */}
               <AnimatePresence>
                 {selectedNationality && selectedNationality !== "1" && (
@@ -782,7 +803,7 @@ const AddEmployees = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
-
+  
               {/* غير الليبي - مرفق جواز السفر */}
               <AnimatePresence>
                 {selectedNationality && selectedNationality !== "1" && (
@@ -822,7 +843,7 @@ const AddEmployees = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
-
+  
               {/* غير الليبي - رقم الإقامة */}
               <AnimatePresence>
                 {selectedNationality && selectedNationality !== "1" && (
@@ -847,7 +868,7 @@ const AddEmployees = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
-
+  
               {/* غير الليبي - مرفق رقم الإقامة */}
               <AnimatePresence>
                 {selectedNationality && selectedNationality !== "1" && (
@@ -887,7 +908,7 @@ const AddEmployees = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
-
+  
               {/* غير الليبي - تاريخ إنتهاء الإقامة */}
               <AnimatePresence>
                 {selectedNationality && selectedNationality !== "1" && (
@@ -911,7 +932,7 @@ const AddEmployees = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
-
+  
               {/* اسم الام */}
               <div className='flex flex-col'>
                 <label className='mb-1 font-semibold'>اسم الام</label>
@@ -926,7 +947,7 @@ const AddEmployees = () => {
                   <span className="text-red-500 text-sm mt-1">{errors.motherName.message}</span>
                 )}
               </div>
-
+  
               {/* المؤهل التربوي */}
               <div className='flex flex-col'>
                 <label className='mb-1 font-semibold'>المؤهل التربوي</label>
@@ -956,7 +977,7 @@ const AddEmployees = () => {
                   <span className="text-red-500 text-sm mt-1">{errors.educationalQualificationFileId.message}</span>
                 )}
               </div>
-
+  
               {/* السيرة الذاتية */}
               <div className='flex flex-col'>
                 <label className='mb-1 font-semibold'>السيرة الذاتية</label>
@@ -986,7 +1007,7 @@ const AddEmployees = () => {
                   <span className="text-red-500 text-sm mt-1">{errors.cvFileId.message}</span>
                 )}
               </div>
-
+  
               {/* سنوات الخبرة */}
               <div className='flex flex-col'>
                 <label className='mb-1 font-semibold'>سنوات الخبرة</label>
@@ -1001,7 +1022,7 @@ const AddEmployees = () => {
                   <span className="text-red-500 text-sm mt-1">{errors.yearsOfExperience.message}</span>
                 )}
               </div>
-
+  
               {/* اختر الادارة - Only for اداري (employeeType == 1) */}
               <AnimatePresence>
                 {selectedEmployeeType === "1" && (
@@ -1031,7 +1052,7 @@ const AddEmployees = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
-
+  
               {/* اختر القسم - Only for اداري (employeeType == 1) */}
               <AnimatePresence>
                 {selectedEmployeeType === "1" && (
@@ -1062,7 +1083,7 @@ const AddEmployees = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
-
+  
               {/* المواد المقررة - Only for معلم (employeeType == 2) */}
               <AnimatePresence>
                 {selectedEmployeeType === "2" && (
@@ -1096,58 +1117,52 @@ const AddEmployees = () => {
                 )}
               </AnimatePresence>
             </div>
+  
+            <div className="flex flex-col md:flex-row gap-4 mt-10">
+              <button
+                type="button"
+                onClick={() => navigate("/Employees")}
+                className="flex-1 border border-red-500 text-red-500 py-3 rounded text-lg font-semibold"
+              >
+                إلغاء
+              </button>
+              
+              {isAddMode && (
+                <button
+                  type="button"
+                  onClick={handleAddContracts}
+                  className="flex-1 bg-[#BE8D4A] text-white py-3 rounded text-lg font-semibold"
+                >
+                  إضافة العقود للموظف
+                </button>
+              )}
+              
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`flex-1 bg-[#BE8D4A] hover:bg-[#a67a3f] text-white py-3 rounded text-lg font-semibold ${
+                  isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
+                }`}
+              >
+                {isSubmitting ? 'جاري الحفظ...' : getButtonText()}
+              </button>
+            </div>
           </form>
         )}
-
-        {/* Action Buttons */}
-        <div className="flex flex-col md:flex-row gap-4 mt-10">
-          <button
-            type="button"
-            onClick={() => navigate("/Employees")}
-            className="flex-1 border border-red-500 text-red-500 py-3 rounded text-lg font-semibold"
-          >
-            إلغاء
-          </button>
-          
-          {isAddMode && (
-            <button
-              type="button"
-              onClick={handleAddContracts}
-              className="flex-1 bg-[#BE8D4A] text-white py-3 rounded text-lg font-semibold"
-            >
-              إضافة العقود للموظف
-            </button>
-          )}
-          
-          <button
-            type={isDeleteMode ? "button" : "submit"}
-            onClick={isDeleteMode ? () => setShowDeleteModal(true) : undefined}
-            disabled={isSubmitting}
-            className={`flex-1 ${
-              isDeleteMode 
-                ? 'bg-red-500 hover:bg-red-600' 
-                : 'bg-[#BE8D4A] hover:bg-[#a67a3f]'
-            } text-white py-3 rounded text-lg font-semibold ${
-              isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
-            }`}
-          >
-            {isSubmitting ? 'جاري الحفظ...' : getButtonText()}
-          </button>
-        </div>
-      </div>
-
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <ConfirmModal
-              desc={`هل أنت متأكد من حذف الموظف "${employeeData?.FullName || 'هذا الموظف'}"؟`}
-              confirmFunc={handleDelete}
-              onClose={() => setShowDeleteModal(false)}
-            />
+  
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <ConfirmModal
+                desc={`هل أنت متأكد من حذف الموظف "${employeeData?.FullName || 'هذا الموظف'}"؟`}
+                confirmFunc={handleDelete}
+                onClose={() => setShowDeleteModal(false)}
+              />
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
