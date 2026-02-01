@@ -8,7 +8,6 @@ const useSchools = (status_id = -1 ,searchText="" , startNumber = 1 ,count = 10,
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const userData  = useSelector((state) => state.auth.userData);
-  console.log(schoolType);
   
   useEffect(() => {
     const getSchools = async () => {

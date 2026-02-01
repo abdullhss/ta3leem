@@ -11,6 +11,7 @@ import { DoTransaction } from '../services/apiServices'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
+import useSchools from '../hooks/schools/useSchools'
 // import useSchools from '../../hooks/useSchools'
 
 const fadeIn = {
@@ -31,13 +32,12 @@ const TransferSchoolRequest = () => {
   const [isMapOpen, setIsMapOpen] = useState(false)
   const [selectedLocation, setSelectedLocation] = useState(null)
   const [selectedSchool, setSelectedSchool] = useState(null)
-  const [schoolsList, setSchoolsList] = useState([])
-  const [loadingSchools, setLoadingSchools] = useState(true)
   
   const userData = useSelector((state) => state.auth.userData)
   
   const { Baladias, loading: baladiasLoading } = useBaladia()
   const { BaldiaOffice } = useBaldiaOffice(selectedSchool?.Baldia_Id || selectedSchool?.BaldiaId)
+  const { schools, loading: schoolsLoading } = useSchools(-1, "", 1, 10000, "Exist")
   const { uploadSingleFile } = useUploadFiles()
   
   const {
@@ -47,38 +47,6 @@ const TransferSchoolRequest = () => {
     watch,
     formState: { errors },
   } = useForm()
-
-  // Fetch schools for the current user
-  useEffect(() => {
-    const fetchUserSchools = async () => {
-      setLoadingSchools(true)
-      try {
-        // Assuming you have a hook or service to fetch user's schools
-        // For now, we'll create a mock or use existing service
-        const response = await DoTransaction(
-          "schoolsListKey", // Replace with actual key
-          userData?.Id || 0,
-          0,
-          "UserId"
-        )
-        
-        if (response.success === 200) {
-          setSchoolsList(response.data || [])
-        } else {
-          toast.error("فشل في تحميل قائمة المدارس")
-        }
-      } catch (error) {
-        console.error("Error fetching schools:", error)
-        toast.error("حدث خطأ في تحميل المدارس")
-      } finally {
-        setLoadingSchools(false)
-      }
-    }
-
-    if (userData?.Id) {
-      fetchUserSchools()
-    }
-  }, [userData])
 
   // Set user data when component loads
   useEffect(() => {
@@ -206,10 +174,10 @@ const TransferSchoolRequest = () => {
       // Prepare data for transfer request
       // Adjust the DoTransaction parameters based on your API requirements
       const response = await DoTransaction(
-        "transferSchoolKey", // Replace with actual key for school transfer
-        `${data.schoolId}#${data.latitude}#${data.longitude}#${data.siteImagesFileId || 0}#${data.neighborsApprovalFileId || 0}#${data.notes || ''}`,
+        "Gpy06t4isIWQFbF36glkdNPH9xRbgbMiBKqH6ViGbKU=",
+        `0#${data.schoolId}#${data.latitude}#${data.longitude}#${data.siteImagesFileId || 0}#${data.neighborsApprovalFileId || 0}#${data.notes || ''}`,
         0, // Action code for transfer
-        "SchoolId#NewLatitude#NewLongitude#SiteImagesFileId#NeighborsApprovalFileId#Notes"
+        "Id#School_Id#latitude#longitude#Baldia_Id#LocationPictureAttach#neighborsApproveAttch#SanadMelkiaAttach#KorokiDrawAttach#AirMapAttach#RequestDate#RequestBy#EducationYear_Id#InitialApproveStatus#InitialApproveBy#InitialApproveDate#FinalApproveStatus#FinalApproveBy#FinalApproveDate#InitialApproveRemarks#FinalApproveRemarks"
       )
       
       console.log("Transfer response:", response)
@@ -294,16 +262,16 @@ const TransferSchoolRequest = () => {
                 {...register("schoolSelect", { required: true })}
                 onChange={(e) => {
                   const schoolId = e.target.value
-                  const school = schoolsList.find(s => s.Id.toString() === schoolId)
+                  const school = schools.find(s => s.id.toString() === schoolId)
                   setSelectedSchool(school)
                 }}
               >
                 <option value="">اختر المدرسة</option>
-                {loadingSchools ? (
+                {schoolsLoading ? (
                   <option value="" disabled>جاري تحميل المدارس...</option>
                 ) : (
-                  schoolsList.map((school) => (
-                    <option key={school.Id} value={school.Id.toString()}>
+                  schools.map((school) => (
+                    <option key={school.id} value={school.id.toString()}>
                       {school.School_FullName || school.FullName}
                     </option>
                   ))
@@ -313,7 +281,7 @@ const TransferSchoolRequest = () => {
             {errors.schoolSelect && <span className="text-red-500 text-sm mt-1">هذا الحقل مطلوب</span>}
             
             {/* Display selected school details */}
-            {selectedSchool && (
+            {/* {selectedSchool && (
               <motion.div 
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
@@ -325,7 +293,7 @@ const TransferSchoolRequest = () => {
                   <div><span className="font-semibold">الكود:</span> {selectedSchool.Code || selectedSchool.SchoolCode}</div>
                 </div>
               </motion.div>
-            )}
+            )} */}
           </div>
 
           {/* موقع المدرسة الجديد */}
