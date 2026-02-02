@@ -6,7 +6,7 @@ import { executeProcedure } from "../services/apiServices";
 import { z } from "zod";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
-import { login } from "../store/slices/authSlice";
+import { login, setEducationYearData } from "../store/slices/authSlice";
 
 /* Zod Schema */
 const loginSchema = z.object({
@@ -70,7 +70,9 @@ const Login = () => {
             toast.info(response.decrypted._0)
         }
         else{
-            // Save user data to auth slice
+              // Save user data to auth slice
+            console.log(response.decrypted.EducationYearData?JSON.parse(response.decrypted.EducationYearData)[0]:null);
+            dispatch(setEducationYearData(response.decrypted.EducationYearData?JSON.parse(response.decrypted.EducationYearData)[0]:null));
             console.log(response.decrypted.userData?JSON.parse(response.decrypted.userData)[0]:null);
             dispatch(login(response.decrypted.userData?JSON.parse(response.decrypted.userData)[0]:null));
             // dispatch(login(response.decrypted));
