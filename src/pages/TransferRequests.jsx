@@ -116,14 +116,6 @@ const TransferRequests = () => {
     }
   ];
 
-  // Add button props if user can create new transfer requests
-  const canCreateRequest = userData?.Role === 'Mofwad' || userData?.Role === 'Admin';
-  const addButtonProps = canCreateRequest ? {
-    title: 'طلب نقل جديد',
-    path: '/requests/create-transfer',
-    state: { mofwadId: userData?.Id }
-  } : null;
-
   if (error) {
     return (
       <div className="bg-white rounded-lg p-4">
@@ -149,7 +141,7 @@ const TransferRequests = () => {
         clickable={true}
         tableTitle="طلبات النقل"
         isHeaderSticky={true}
-        AddButtonProps={addButtonProps}
+        AddButtonProps={{ title: 'تقديم طلب', path: '/requests/transfer-school', state: { mofwadId: userData?.Id } }}
         actionsConfig={actionsConfig}
         searchPlaceholder="ابحث باسم المدرسة..."
         onDoubleClick={(item) => {
