@@ -164,9 +164,9 @@ const RenewalRequests = () => {
         isFilteredByDate={true}
         rowsPerPageDefault={5}
         clickable={true}
-        tableTitle="طلبات تجديد التراخيص"
+        tableTitle="طلبات التجديد"
+        AddButtonProps={{ title: 'تقديم طلب', path: '/requests/renew-school', state: { mofwadId: userData?.Id } }}
         isHeaderSticky={true}
-        AddButtonProps={addButtonProps}
         actionsConfig={actionsConfig}
         searchPlaceholder="ابحث باسم المدرسة..."
         onDoubleClick={(item) => {
