@@ -74,7 +74,8 @@ export default function Sidebar() {
         { title: 'طلب تكليف مدير مدرسة جديد', path: '/requests/assign-principal' },
         { title: 'الطلبات الاخرى', path: '/requests/other' },
         { title: 'طلبات التجديد', path: '/requests/renewal' },
-        { title: 'طلب زيارة', path: '/requests/visit' }
+        { title: 'طلب زيارة', path: '/requests/visit' },
+        { title: 'طلبات النقل', path: '/transfer-requests' }
       ]
     },
     // { title: 'رفع المسوغات', path: '/uploads' },

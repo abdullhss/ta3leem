@@ -31,6 +31,8 @@ import SchoolDevisions from './pages/Manger/SchoolDevisions.jsx'
 import Employees from './pages/Manger/Employees.jsx'
 import AddEmployees from './pages/Manger/AddEmployees.jsx'
 import AddEmployeesContracts from './pages/Manger/AddEmployeesContracts.jsx'
+import TransferRequests from './pages/TransferRequests.jsx'
+import TransferRequest from './pages/TransferRequest.jsx'
 
 function App() {
   return (
@@ -75,6 +77,8 @@ function App() {
         <Route path='/Employees/Edit/:id' element={<AddEmployees/>}/>
         <Route path='/Employees/Delete/:id' element={<AddEmployees/>}/>
         <Route path='/Employees/Contracts/Add' element={<AddEmployeesContracts/>}/>
+        <Route path='/transfer-requests' element={<TransferRequests/>}/>
+        <Route path='/transfer-requests/:id' element={<TransferRequest/>}/>
       </Route>
     </Routes>
   )

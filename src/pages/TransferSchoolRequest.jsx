@@ -175,7 +175,7 @@ const TransferSchoolRequest = () => {
       // Adjust the DoTransaction parameters based on your API requirements
       const response = await DoTransaction(
         "Gpy06t4isIWQFbF36glkdNPH9xRbgbMiBKqH6ViGbKU=",
-        `0#${data.schoolId}#${data.latitude}#${data.longitude}#${data.siteImagesFileId || 0}#${data.neighborsApprovalFileId || 0}#${data.notes || ''}`,
+        `0#${data.schoolId || 0}#${data.latitude || 0}#${data.longitude || 0}#${selectedSchool ? (selectedSchool.Baldia_Id || selectedSchool.BaldiaId || 0) : 0}#${data.siteImagesFileId || 0}#${data.neighborsApprovalFileId || 0}#0#0#0#default#${userData?.Id || 0}#0#0#0#default#0#0#default##`,
         0, // Action code for transfer
         "Id#School_Id#latitude#longitude#Baldia_Id#LocationPictureAttach#neighborsApproveAttch#SanadMelkiaAttach#KorokiDrawAttach#AirMapAttach#RequestDate#RequestBy#EducationYear_Id#InitialApproveStatus#InitialApproveBy#InitialApproveDate#FinalApproveStatus#FinalApproveBy#FinalApproveDate#InitialApproveRemarks#FinalApproveRemarks"
       )
