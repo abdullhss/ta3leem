@@ -33,7 +33,8 @@ import AddEmployees from './pages/Manger/AddEmployees.jsx'
 import AddEmployeesContracts from './pages/Manger/AddEmployeesContracts.jsx'
 import TransferRequests from './pages/TransferRequests.jsx'
 import TransferRequest from './pages/TransferRequest.jsx'
-
+import RenewSchoolRequest from './pages/RenewSchoolRequest.jsx'
+import RenewRequest from './pages/RenewRequest.jsx'
 function App() {
   return (
     <Routes>
@@ -79,6 +80,9 @@ function App() {
         <Route path='/Employees/Contracts/Add' element={<AddEmployeesContracts/>}/>
         <Route path='/transfer-requests' element={<TransferRequests/>}/>
         <Route path='/transfer-requests/:id' element={<TransferRequest/>}/>
+        <Route path='/renew-requests/:id' element={<RenewRequest/>}/>
+        <Route path='/requests/renew-school' element={<RenewSchoolRequest/>}/>
+        <Route path='/renew-school-requests/:id' element={<RenewSchoolRequest/>}/>
       </Route>
     </Routes>
   )
