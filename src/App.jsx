@@ -35,6 +35,7 @@ import TransferRequests from './pages/TransferRequests.jsx'
 import TransferRequest from './pages/TransferRequest.jsx'
 import RenewSchoolRequest from './pages/RenewSchoolRequest.jsx'
 import RenewRequest from './pages/RenewRequest.jsx'
+import CreateVisitRequest from './pages/CreateVisitRequest.jsx'
 function App() {
   return (
     <Routes>
@@ -82,7 +83,8 @@ function App() {
         <Route path='/transfer-requests/:id' element={<TransferRequest/>}/>
         <Route path='/renew-requests/:id' element={<RenewRequest/>}/>
         <Route path='/requests/renew-school' element={<RenewSchoolRequest/>}/>
-        <Route path='/renew-school-requests/:id' element={<RenewSchoolRequest/>}/>
+        <Route path='/renew-school-requests/:id' element={<RenewSchoolRequest/>}/>\
+        <Route path='/create-visit-request' element={<CreateVisitRequest/>}/>
       </Route>
     </Routes>
   )
