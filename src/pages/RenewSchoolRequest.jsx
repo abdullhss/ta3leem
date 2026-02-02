@@ -5,6 +5,7 @@ import { toast } from 'react-toastify'
 import { motion } from 'framer-motion'
 import useSchools from '../hooks/schools/useSchools'
 import { DoTransaction } from '../services/apiServices'
+import { useSelector } from 'react-redux'
 
 const fadeIn = {
   initial: { opacity: 0, y: 15 },
@@ -16,11 +17,12 @@ const RenewSchoolRequest = () => {
     register,
     handleSubmit,
     formState: { errors, isValid }
-  } = useForm()
+  } = useForm({ mode: 'onChange' })
   
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  
+  const userData = useSelector((state) => state.auth.userData)
+  const educationYearData = useSelector((state) => state.auth.educationYearData)
   // Fetch schools
   const { schools, loading } = useSchools(
     -1,  // statusId
@@ -36,14 +38,18 @@ const RenewSchoolRequest = () => {
     
     try {
       const response = await DoTransaction(
-        "Jf6ubvBmZQ4bzGJbt/ux9edm/YG1+BQ0qmTwv4U3uy8="
-        `0#${data.schoolId}#${data.reason}`,
+        "Jf6ubvBmZQ4bzGJbt/ux9edm/YG1+BQ0qmTwv4U3uy8=",
+        `0#${data.schoolId}#${"default"}#${userData.Id}#${educationYearData.Id}#0#0#default#0#0#default###0#0#default#`,
         0,
         "Id#School_Id#RequestDate#RequestBy#EducationYear_Id#InitialApproveStatus#InitialApproveBy#InitialApproveDate#FinalApproveStatus#FinalApproveBy#FinalApproveDate#InitialApproveRemarks#FinalApproveRemarks#MainApproveStatus#MainApproveBy#MainApproveDate#MainApproveRemarks"
       );
-      console.log(response);
-      toast.success('تم إرسال طلب التجديد بنجاح')
-      navigate(-1)
+      if(response.success == 200){
+        toast.success('تم إرسال طلب التجديد بنجاح')
+        navigate("/requests/renewal")
+      }
+      else{
+        toast.error(response.errorMessage)
+      }
     } catch (error) {
       console.error('Submission failed:', error)
       toast.error('فشل في إرسال طلب التجديد')
@@ -87,26 +93,6 @@ const RenewSchoolRequest = () => {
               )}
               {loading && (
                 <p className="text-gray-500 text-sm mt-1">جاري تحميل المدارس...</p>
-              )}
-            </div>
-            
-            {/* السبب */}
-            <div className="flex flex-col gap-2">
-              <label className="font-medium">السبب</label>
-              <textarea
-                {...register('reason', { 
-                  required: 'هذا الحقل مطلوب',
-                  minLength: {
-                    value: 10,
-                    message: 'يجب أن يكون السبب على الأقل 10 أحرف'
-                  }
-                })}
-                rows={6}
-                placeholder="اكتب سبب طلب تجديد المدرسة هنا..."
-                className="border rounded-md p-3 w-full focus:outline-none focus:ring-2 focus:ring-[#BE8D4A] resize-none"
-              />
-              {errors.reason && (
-                <p className="text-red-500 text-sm mt-1">{errors.reason.message}</p>
               )}
             </div>
           </div>
