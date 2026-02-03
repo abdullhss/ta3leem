@@ -7,10 +7,11 @@ import { Button } from '../ui/button'
 import useBaladia from '../hooks/useBaladia'
 import useBaldiaOffice from '../hooks/useBaldiaOffice'
 import MapPicker from '../components/MapPicker'
+import FileViewer from '../components/FileViewer'
 import { DoTransaction } from '../services/apiServices'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import useSchools from '../hooks/schools/useSchools'
 // import useSchools from '../../hooks/useSchools'
 
@@ -23,6 +24,9 @@ const TransferSchoolRequest = () => {
   const siteImagesRef = useRef(null)
   const neighborsApprovalRef = useRef(null)
   const navigate = useNavigate()
+  const location = useLocation()
+  const { transferRequest, action = 0 } = location.state || {}
+  const isEditMode = action === 1
   
   const [uploadedFiles, setUploadedFiles] = useState({
     siteImages: null,
@@ -88,6 +92,52 @@ const TransferSchoolRequest = () => {
       setValue("longitude", selectedLocation.lng)
     }
   }, [selectedLocation, setValue])
+
+  // Prefill form when editing – pass data and preview for editing
+  useEffect(() => {
+    if (!isEditMode || !transferRequest) return
+    const lat = transferRequest.Request_latitude ?? transferRequest.latitude
+    const lng = transferRequest.Request_longitude ?? transferRequest.longitude
+
+    setValue("schoolId", transferRequest.School_Id)
+    setValue("latitude", lat)
+    setValue("longitude", lng)
+    setValue("schoolName", transferRequest.School_FullName || "")
+    setValue("delegateName", userData?.FullName || "")
+    setValue("companyName", userData?.CompanyName || "")
+
+    if (lat != null && lng != null) {
+      setSelectedLocation({ lat, lng })
+    }
+
+    if (schools?.length) {
+      const school = schools.find(s => (s.id || s.Id)?.toString() === String(transferRequest.School_Id))
+      if (school) {
+        setSelectedSchool(school)
+        setValue("schoolSelect", (school.id ?? school.Id)?.toString())
+      } else {
+        setValue("schoolSelect", String(transferRequest.School_Id))
+      }
+    }
+
+    // Prefill existing attachments so they are shown and editable
+    const locationAttach = transferRequest.LocationPictureAttach ?? transferRequest.locationPictureAttach
+    const neighborsAttach = transferRequest.neighborsApproveAttch ?? transferRequest.neighborsApproveAttach ?? transferRequest.NeighborsApproveAttach
+    if (locationAttach && locationAttach !== 0) {
+      setValue("siteImagesFileId", locationAttach, { shouldValidate: true })
+      setUploadedFiles(prev => ({
+        ...prev,
+        siteImages: { id: locationAttach, name: "مرفق صور الموقع الحالي", type: "siteImages" }
+      }))
+    }
+    if (neighborsAttach && neighborsAttach !== 0) {
+      setValue("neighborsApprovalFileId", neighborsAttach, { shouldValidate: true })
+      setUploadedFiles(prev => ({
+        ...prev,
+        neighborsApproval: { id: neighborsAttach, name: "مرفق موافقة الجيران الحالي", type: "neighborsApproval" }
+      }))
+    }
+  }, [isEditMode, transferRequest, schools, setValue, userData])
 
   const handleFileUpload = async (file, type) => {
     if (!file) return
@@ -171,23 +221,22 @@ const TransferSchoolRequest = () => {
 
   const onSubmit = async (data) => {
     try {
-      // Prepare data for transfer request
-      // Adjust the DoTransaction parameters based on your API requirements
+      const requestId = isEditMode && transferRequest?.id ? transferRequest.id : 0
+      const siteImagesId = data.siteImagesFileId || (isEditMode && (transferRequest?.LocationPictureAttach ?? transferRequest?.locationPictureAttach)) || 0
+      const neighborsId = data.neighborsApprovalFileId || (isEditMode && (transferRequest?.neighborsApproveAttch ?? transferRequest?.neighborsApproveAttach ?? transferRequest?.NeighborsApproveAttach)) || 0
+      const columnsValues = `${requestId}#${data.schoolId || 0}#${data.latitude || 0}#${data.longitude || 0}#${selectedSchool ? (selectedSchool.Baldia_Id || selectedSchool.BaldiaId || 0) : 0}#${siteImagesId}#${neighborsId}#0#0#0#default#${userData?.Id || 0}#0#0#0#default#0#0#default##`
       const response = await DoTransaction(
         "Gpy06t4isIWQFbF36glkdNPH9xRbgbMiBKqH6ViGbKU=",
-        `0#${data.schoolId || 0}#${data.latitude || 0}#${data.longitude || 0}#${selectedSchool ? (selectedSchool.Baldia_Id || selectedSchool.BaldiaId || 0) : 0}#${data.siteImagesFileId || 0}#${data.neighborsApprovalFileId || 0}#0#0#0#default#${userData?.Id || 0}#0#0#0#default#0#0#default##`,
-        0, // Action code for transfer
+        columnsValues,
+        isEditMode ? 1 : 0, // 1 = edit, 0 = add
         "Id#School_Id#latitude#longitude#Baldia_Id#LocationPictureAttach#neighborsApproveAttch#SanadMelkiaAttach#KorokiDrawAttach#AirMapAttach#RequestDate#RequestBy#EducationYear_Id#InitialApproveStatus#InitialApproveBy#InitialApproveDate#FinalApproveStatus#FinalApproveBy#FinalApproveDate#InitialApproveRemarks#FinalApproveRemarks"
       )
       
-      console.log("Transfer response:", response)
-      
       if (response.success === 200) {
-        toast.success("تم تقديم طلب نقل المدرسة بنجاح")
-        // Navigate back or to success page
-        navigate(-1)
+        toast.success(isEditMode ? "تم تحديث طلب النقل بنجاح" : "تم تقديم طلب نقل المدرسة بنجاح")
+        navigate(isEditMode ? "/transfer-requests" : -1)
       } else {
-        toast.error(response.errorMessage || "فشل في تقديم طلب نقل المدرسة")
+        toast.error(response.errorMessage || (isEditMode ? "فشل في تحديث الطلب" : "فشل في تقديم طلب نقل المدرسة"))
       }
     } catch (error) {
       console.error("Transfer error:", error)
@@ -207,7 +256,7 @@ const TransferSchoolRequest = () => {
         <span className="bg-black rounded-md flex-shrink-0" onClick={() => navigate(-1)}>
           <ChevronRight className="text-white cursor-pointer" height={20} width={20} />
         </span>
-        <h1 className="text-lg md:text-xl">تقديم طلب نقل مدرسة</h1>
+        <h1 className="text-lg md:text-xl">{isEditMode ? 'تعديل طلب النقل' : 'تقديم طلب نقل مدرسة'}</h1>
       </div>
 
       <motion.div
@@ -325,8 +374,8 @@ const TransferSchoolRequest = () => {
                     <span className="font-medium">الموقع الجديد المحدد:</span>
                   </div>
                   <div className="text-sm text-gray-600 mt-1">
-                    <div>خط العرض: {selectedLocation.lat.toFixed(6)}</div>
-                    <div>خط الطول: {selectedLocation.lng.toFixed(6)}</div>
+                    <div>خط العرض: {selectedLocation.lat}</div>
+                    <div>خط الطول: {selectedLocation.lng}</div>
                   </div>
                   <button
                     type="button"
@@ -396,7 +445,7 @@ const TransferSchoolRequest = () => {
                     <Paperclip />
                     تحميل صور الموقع
                   </button>
-                  {errors.siteImagesFileId && (
+                  {!isEditMode && errors.siteImagesFileId && (
                     <span className="text-red-500 text-sm mt-1">
                       رفع صور الموقع مطلوب
                     </span>
@@ -407,7 +456,7 @@ const TransferSchoolRequest = () => {
                 <input
                   type="file"
                   hidden
-                  {...register("siteImagesFileId", { required: true })}
+                  {...register("siteImagesFileId", { required: !isEditMode })}
                   ref={siteImagesRef}
                   onChange={(e) => handleFileUpload(e.target.files[0], "siteImages")}
                   accept="image/*,.pdf,.doc,.docx"
@@ -425,7 +474,7 @@ const TransferSchoolRequest = () => {
                     <Paperclip />
                     تحميل موافقة الجيران
                   </button>
-                  {errors.neighborsApprovalFileId && (
+                  {!isEditMode && errors.neighborsApprovalFileId && (
                     <span className="text-red-500 text-sm mt-1">
                       رفع موافقة الجيران مطلوب
                     </span>
@@ -436,7 +485,7 @@ const TransferSchoolRequest = () => {
                 <input
                   type="file"
                   hidden
-                  {...register("neighborsApprovalFileId", { required: true })}
+                  {...register("neighborsApprovalFileId", { required: !isEditMode })}
                   ref={neighborsApprovalRef}
                   onChange={(e) => handleFileUpload(e.target.files[0], "neighborsApproval")}
                   accept="image/*,.pdf,.doc,.docx"
@@ -478,7 +527,7 @@ const TransferSchoolRequest = () => {
                 : 'bg-[#BE8D4A] hover:bg-[#a67a3f] text-white'
             }`}
           >
-            تقديم طلب النقل
+            {isEditMode ? 'حفظ التعديلات' : 'تقديم طلب النقل'}
           </Button>
         </div>
       </div>

@@ -4,6 +4,9 @@ import TablePage from '../components/TablePage';
 import useSchoolVisitRequests from '../hooks/Mofwad/useSchoolVisitRequests';
 import { useSelector } from 'react-redux';
 import { toast } from "react-toastify";
+import { DoTransaction } from '../services/apiServices';
+
+const VISIT_TABLE_KEY = "0wIGNXjA6Ttti4KZHVApAe4w6uMqn+cmKe+S1I64XGE=";
 
 // Columns configuration for visit requests
 const columns = [
@@ -13,6 +16,7 @@ const columns = [
   { uid: 'Reason', name: 'سبب الزيارة' },
   { uid: 'requestStatus', name: 'حالة الطلب' },
   { uid: 'SchoolStatus', name: 'حالة المدرسة' },
+  { uid: 'actions', name: 'الإجراءات' },
 ];
 
 const VisitRequests = () => {
@@ -25,6 +29,7 @@ const VisitRequests = () => {
   const [schoolStatusFilter, setSchoolStatusFilter] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [refreshKey, setRefreshKey] = useState(0);
   
   // Start number for pagination (1-indexed)
   const startNumber = (currentPage - 1) * rowsPerPage + 1;
@@ -35,8 +40,7 @@ const VisitRequests = () => {
     searchText,
     startNumber,
     rowsPerPage,
-    statusFilter,
-    schoolStatusFilter
+    refreshKey
   );
 
   // Status options based on InitialApproveStatus
@@ -143,14 +147,54 @@ const VisitRequests = () => {
     }
   }, [SchoolVisitRequests]);
 
+  const canEditOrDelete = (data) => data?.InitialApproveStatus === 0 && data?.FinalApproveStatus === 0;
+
+  const handleDeleteVisit = async (item) => {
+    const data = item._fullData || item;
+    if (!canEditOrDelete(data)) {
+      toast.warning("لا يمكن حذف الطلب في حالته الحالية");
+      return;
+    }
+    if (!window.confirm("هل أنت متأكد من حذف هذا الطلب؟")) return;
+    try {
+      const response = await DoTransaction(VISIT_TABLE_KEY, `${data.id}`, 2);
+      if (response?.success === 200) {
+        toast.success("تم حذف الطلب بنجاح");
+        setRefreshKey((k) => k + 1);
+      } else {
+        toast.error(response?.errorMessage || "فشل في حذف الطلب");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("حدث خطأ أثناء الحذف");
+    }
+  };
+
   // Actions configuration
   const actionsConfig = [
     {
       label: 'عرض التفاصيل',
       color: 'primary',
       onClick: (item) => navigate(`/visit-requests/${item.id}`),
-      icon: '👁️'
-    }
+    },
+    {
+      label: 'تعديل',
+      onClick: (item) => {
+        const data = item._fullData || item;
+        if (!canEditOrDelete(data)) {
+          toast.warning("لا يمكن تعديل الطلب في حالته الحالية");
+          return;
+        }
+        navigate('/create-visit-request', {
+          state: { visitRequest: data, action: 1 }
+        });
+      },
+    },
+    {
+      label: 'حذف',
+      danger: true,
+      onClick: handleDeleteVisit,
+    },
   ];
 
   // Filter configuration

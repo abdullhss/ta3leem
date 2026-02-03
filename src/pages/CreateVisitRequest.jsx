@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { motion } from 'framer-motion'
 import useSchools from '../hooks/schools/useSchools'
@@ -16,10 +16,15 @@ const VisitRequest = () => {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isValid }
   } = useForm()
   
   const navigate = useNavigate()
+  const location = useLocation()
+  const { visitRequest, action = 0 } = location.state || {}
+  const isEditMode = action === 1
+  
   const [isSubmitting, setIsSubmitting] = useState(false)
   const userData = useSelector((state) => state.auth.userData)
   const educationYearData = useSelector((state) => state.auth.educationYearData)
@@ -32,22 +37,31 @@ const VisitRequest = () => {
     "Exist" // schoolType
   )
   
+  useEffect(() => {
+    if (isEditMode && visitRequest) {
+      setValue('schoolId', visitRequest.School_Id)
+      setValue('reason', visitRequest.Reason || visitRequest.reason || '')
+    }
+  }, [isEditMode, visitRequest, setValue])
+  
   // Handle form submission
   const onSubmit = async (data) => {
-      const response = await DoTransaction(
-        "0wIGNXjA6Ttti4KZHVApAe4w6uMqn+cmKe+S1I64XGE=", // استبدل بمفتاح المعاملة الخاص بطلب الزيارة
-        `0#${data.schoolId}#${data.reason}#${"default"}#${userData.Id}#${educationYearData.Id}#0#0#default#0#0#default##`,
-        0,
-        "Id#School_Id#Reason#RequestDate#RequestBy#EducationYear_Id#InitialApproveStatus#InitialApproveBy#InitialApproveDate#FinalApproveStatus#FinalApproveBy#FinalApproveDate#InitialApproveRemarks#FinalApproveRemarks"
-      );
-      if(response.success == 200){
-        toast.success('تم إرسال طلب الزيارة بنجاح')
-        navigate("/requests/visit")
-      }
-      else{
-        toast.error(response.errorMessage)
-      }
+    const requestId = isEditMode && visitRequest?.id ? visitRequest.id : 0
+    const columnsValues = `${requestId}#${data.schoolId}#${data.reason}#${"default"}#${userData.Id}#${educationYearData.Id}#0#0#default#0#0#default##`
+    const response = await DoTransaction(
+      "0wIGNXjA6Ttti4KZHVApAe4w6uMqn+cmKe+S1I64XGE=",
+      columnsValues,
+      isEditMode ? 1 : 0,
+      "Id#School_Id#Reason#RequestDate#RequestBy#EducationYear_Id#InitialApproveStatus#InitialApproveBy#InitialApproveDate#FinalApproveStatus#FinalApproveBy#FinalApproveDate#InitialApproveRemarks#FinalApproveRemarks"
+    );
+    if(response.success == 200){
+      toast.success(isEditMode ? 'تم تحديث طلب الزيارة بنجاح' : 'تم إرسال طلب الزيارة بنجاح')
+      navigate("/requests/visit")
     }
+    else{
+      toast.error(response.errorMessage)
+    }
+  }
   
   return (
     <div className="p-6 flex flex-col gap-6 w-full">
@@ -60,7 +74,7 @@ const VisitRequest = () => {
       >
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
           <h1 className="text-lg font-bold">
-            طلب زيارة
+            {isEditMode ? 'تعديل طلب الزيارة' : 'طلب زيارة'}
           </h1>
           
           <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
@@ -127,7 +141,7 @@ const VisitRequest = () => {
                   : 'bg-gray-400 cursor-not-allowed'
               }`}
             >
-              {isSubmitting ? 'جاري الإرسال...' : 'إرسال الطلب'}
+              {isSubmitting ? 'جاري الإرسال...' : (isEditMode ? 'حفظ التعديلات' : 'إرسال الطلب')}
             </button>
           </div>
         </form>

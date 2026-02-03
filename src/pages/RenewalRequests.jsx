@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TablePage from '../components/TablePage';
-import useSchoolRenewRequests from '../hooks/Mofwad/useSchoolRenewRequests'; // You'll need to create this hook
+import useSchoolRenewRequests from '../hooks/Mofwad/useSchoolRenewRequests';
 import { useSelector } from 'react-redux';
 import { toast } from "react-toastify";
-import useSingleSchoolRenew from '../hooks/Mofwad/useSingleSchoolRenew';
+import { DoTransaction } from '../services/apiServices';
+
+const RENEWAL_TABLE_KEY = "Jf6ubvBmZQ4bzGJbt/ux9edm/YG1+BQ0qmTwv4U3uy8=";
 
 // Columns configuration for renewal requests
 const columns = [
   { uid: 'School_FullName', name: 'اسم المدرسة' },
   { uid: 'RequestDate', name: 'تاريخ الطلب' },
   { uid: 'requestStatus', name: 'حالة الطلب' },
+  { uid: 'actions', name: 'الإجراءات' },
 ];
 
 const RenewalRequests = () => {
@@ -22,6 +25,7 @@ const RenewalRequests = () => {
   const [statusFilter, setStatusFilter] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [refreshKey, setRefreshKey] = useState(0);
   
   // Start number for pagination (1-indexed)
   const startNumber = (currentPage - 1) * rowsPerPage + 1;
@@ -32,7 +36,7 @@ const RenewalRequests = () => {
     searchText,
     startNumber,
     rowsPerPage,
-    statusFilter
+    refreshKey
   );
 
   // Status options based on MainApproveStatus
@@ -110,15 +114,53 @@ const RenewalRequests = () => {
     }
   }, [SchoolRenewRequests]);
 
+  const canEditOrDelete = (data) => data?.InitialApproveStatus === 0 && data?.FinalApproveStatus === 0;
+
+  const handleDeleteRenewal = async (item) => {
+    const data = item._fullData || item;
+    if (!canEditOrDelete(data)) {
+      toast.warning("لا يمكن حذف الطلب في حالته الحالية");
+      return;
+    }
+    if (!window.confirm("هل أنت متأكد من حذف هذا الطلب؟")) return;
+    try {
+      const response = await DoTransaction(RENEWAL_TABLE_KEY, `${data.id}`, 2);
+      if (response?.success === 200) {
+        toast.success("تم حذف الطلب بنجاح");
+        setRefreshKey((k) => k + 1);
+      } else {
+        toast.error(response?.errorMessage || "فشل في حذف الطلب");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("حدث خطأ أثناء الحذف");
+    }
+  };
+
   // Actions configuration
   const actionsConfig = [
-    // Add actions here if needed
-    // Example:
-    // {
-    //   label: 'عرض',
-    //   color: 'primary',
-    //   onClick: (item) => navigate(`/renewal-requests/${item.id}`)
-    // }
+    {
+      label: 'عرض التفاصيل',
+      onClick: (item) => navigate(`/renew-requests/${item.id}`),
+    },
+    {
+      label: 'تعديل',
+      onClick: (item) => {
+        const data = item._fullData || item;
+        if (!canEditOrDelete(data)) {
+          toast.warning("لا يمكن تعديل الطلب في حالته الحالية");
+          return;
+        }
+        navigate('/requests/renew-school', {
+          state: { renewalRequest: data, action: 1 }
+        });
+      },
+    },
+    {
+      label: 'حذف',
+      danger: true,
+      onClick: handleDeleteRenewal,
+    },
   ];
 
   // Filter configuration

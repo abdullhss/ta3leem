@@ -4,6 +4,9 @@ import TablePage from '../components/TablePage';
 import useSchoolTransRequests from '../hooks/Mofwad/useSchoolTransRequests';
 import { useSelector } from 'react-redux';
 import { toast } from "react-toastify";
+import { DoTransaction } from '../services/apiServices';
+
+const TRANSFER_TABLE_KEY = "Gpy06t4isIWQFbF36glkdNPH9xRbgbMiBKqH6ViGbKU=";
 
 // Columns configuration
 const columns = [
@@ -25,6 +28,7 @@ const TransferRequests = () => {
   const [statusFilter, setStatusFilter] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [refreshKey, setRefreshKey] = useState(0);
   
   // Start number for pagination (1-indexed)
   const startNumber = (currentPage - 1) * rowsPerPage + 1;
@@ -35,7 +39,7 @@ const TransferRequests = () => {
     searchText,
     startNumber,
     rowsPerPage,
-    statusFilter
+    refreshKey
   );
   console.log(SchoolTransRequests);
   
@@ -98,9 +102,50 @@ const TransferRequests = () => {
     }
   }, [SchoolTransRequests]);
 
+  // Only allow edit/delete when request is still pending (InitialApproveStatus === 0)
+  const canEditOrDelete = (data) => data?.InitialApproveStatus === 0 && data?.FinalApproveStatus === 0;
+
+  const handleDeleteTransfer = async (item) => {
+    const data = item._fullData || item;
+    if (!canEditOrDelete(data)) {
+      toast.warning("لا يمكن حذف الطلب في حالته الحالية");
+      return;
+    }
+    if (!window.confirm("هل أنت متأكد من حذف هذا الطلب؟")) return;
+    try {
+      const response = await DoTransaction(TRANSFER_TABLE_KEY, `${data.id}`, 2);
+      if (response?.success === 200) {
+        toast.success("تم حذف الطلب بنجاح");
+        setRefreshKey((k) => k + 1);
+      } else {
+        toast.error(response?.errorMessage || "فشل في حذف الطلب");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("حدث خطأ أثناء الحذف");
+    }
+  };
+
   // Actions configuration
   const actionsConfig = [
-
+    {
+      label: 'تعديل',
+      onClick: (item) => {
+        const data = item._fullData || item;
+        if (!canEditOrDelete(data)) {
+          toast.warning("لا يمكن تعديل الطلب في حالته الحالية");
+          return;
+        }
+        navigate('/requests/transfer-school', {
+          state: { transferRequest: data, action: 1 }
+        });
+      },
+    },
+    {
+      label: 'حذف',
+      danger: true,
+      onClick: handleDeleteTransfer,
+    },
   ];
 
   // Filter configuration

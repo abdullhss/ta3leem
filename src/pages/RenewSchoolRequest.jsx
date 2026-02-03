@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { motion } from 'framer-motion'
 import useSchools from '../hooks/schools/useSchools'
@@ -16,10 +16,15 @@ const RenewSchoolRequest = () => {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isValid }
   } = useForm({ mode: 'onChange' })
   
   const navigate = useNavigate()
+  const location = useLocation()
+  const { renewalRequest, action = 0 } = location.state || {}
+  const isEditMode = action === 1
+  
   const [isSubmitting, setIsSubmitting] = useState(false)
   const userData = useSelector((state) => state.auth.userData)
   const educationYearData = useSelector((state) => state.auth.educationYearData)
@@ -32,19 +37,27 @@ const RenewSchoolRequest = () => {
     "Exist" // schoolType
   )
   
+  useEffect(() => {
+    if (isEditMode && renewalRequest) {
+      setValue('schoolId', renewalRequest.School_Id)
+    }
+  }, [isEditMode, renewalRequest, setValue])
+  
   // Handle form submission
   const onSubmit = async (data) => {
     setIsSubmitting(true)
     
     try {
+      const requestId = isEditMode && renewalRequest?.id ? renewalRequest.id : 0
+      const columnsValues = `${requestId}#${data.schoolId}#${"default"}#${userData.Id}#${educationYearData.Id}#0#0#default#0#0#default###0#0#default#`
       const response = await DoTransaction(
         "Jf6ubvBmZQ4bzGJbt/ux9edm/YG1+BQ0qmTwv4U3uy8=",
-        `0#${data.schoolId}#${"default"}#${userData.Id}#${educationYearData.Id}#0#0#default#0#0#default###0#0#default#`,
-        0,
+        columnsValues,
+        isEditMode ? 1 : 0,
         "Id#School_Id#RequestDate#RequestBy#EducationYear_Id#InitialApproveStatus#InitialApproveBy#InitialApproveDate#FinalApproveStatus#FinalApproveBy#FinalApproveDate#InitialApproveRemarks#FinalApproveRemarks#MainApproveStatus#MainApproveBy#MainApproveDate#MainApproveRemarks"
       );
       if(response.success == 200){
-        toast.success('تم إرسال طلب التجديد بنجاح')
+        toast.success(isEditMode ? 'تم تحديث طلب التجديد بنجاح' : 'تم إرسال طلب التجديد بنجاح')
         navigate("/requests/renewal")
       }
       else{
@@ -69,7 +82,7 @@ const RenewSchoolRequest = () => {
       >
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
           <h1 className="text-lg font-bold">
-            تقديم طلبات التجديد
+            {isEditMode ? 'تعديل طلب التجديد' : 'تقديم طلبات التجديد'}
           </h1>
           
           <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
@@ -116,7 +129,7 @@ const RenewSchoolRequest = () => {
                   : 'bg-gray-400 cursor-not-allowed'
               }`}
             >
-              {isSubmitting ? 'جاري الإرسال...' : 'إرسال الطلب'}
+              {isSubmitting ? 'جاري الإرسال...' : (isEditMode ? 'حفظ التعديلات' : 'إرسال الطلب')}
             </button>
           </div>
         </form>

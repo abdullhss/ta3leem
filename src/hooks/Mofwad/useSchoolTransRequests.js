@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { executeProcedure } from "../../services/apiServices";
 
-const useSchoolTransRequests = (Mofwad_Id , searchText = "", StartNum = 1, Count = 10) => {
+const useSchoolTransRequests = (Mofwad_Id , searchText = "", StartNum = 1, Count = 10, refreshKey = 0) => {
   const [SchoolTransRequests, setSchoolTransRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -23,7 +23,7 @@ const useSchoolTransRequests = (Mofwad_Id , searchText = "", StartNum = 1, Count
     };
 
     getMofwad();
-  }, [Mofwad_Id, searchText, StartNum, Count]);
+  }, [Mofwad_Id, searchText, StartNum, Count, refreshKey]);
 
   return { SchoolTransRequests, totalCount, loading, error };
 };

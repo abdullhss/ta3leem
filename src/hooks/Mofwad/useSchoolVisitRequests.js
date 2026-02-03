@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { executeProcedure } from "../../services/apiServices";
 
-const useSchoolVisitRequests = (Mofwad_id, textValue="", StartNum=1, Count=10) => {
+const useSchoolVisitRequests = (Mofwad_id, textValue="", StartNum=1, Count=10, refreshKey = 0) => {
   const [SchoolVisitRequests, setSchoolVisitRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,7 +24,7 @@ const useSchoolVisitRequests = (Mofwad_id, textValue="", StartNum=1, Count=10) =
     };
 
     getSchoolVisitRequests();
-  }, [Mofwad_id, textValue, StartNum, Count]);
+  }, [Mofwad_id, textValue, StartNum, Count, refreshKey]);
 
   return { SchoolVisitRequests, totalCount, loading, error };
 };
