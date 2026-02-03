@@ -172,7 +172,7 @@ const RenewalRequests = () => {
         searchPlaceholder="ابحث باسم المدرسة..."
         onDoubleClick={(item) => {
           const data = item._fullData || item;
-          navigate(`/renewal-requests/${data.id}`);
+          navigate(`/renew-requests/${data.id}`);
         }}
         // Custom render for status column
         renderCell={(column, item) => {
