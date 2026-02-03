@@ -242,7 +242,7 @@ const VisitRequests = () => {
         rowsPerPageDefault={5}
         clickable={true}
         tableTitle="طلبات الزيارة"
-        AddButtonProps={addButtonProps}
+        AddButtonProps={{ title: 'طلب زيارة جديد', path: '/create-visit-request', state: { mofwadId: userData?.Id } }}
         isHeaderSticky={true}
         actionsConfig={actionsConfig}
         searchPlaceholder="ابحث باسم المدرسة..."

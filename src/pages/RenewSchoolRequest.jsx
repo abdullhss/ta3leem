@@ -91,7 +91,7 @@ const RenewSchoolRequest = () => {
               <label className="font-medium">المدرسة</label>
               <select
                 {...register('schoolId', { required: 'هذا الحقل مطلوب' })}
-                className="border rounded-md p-3 w-full focus:outline-none focus:ring-2 focus:ring-[#BE8D4A]"
+                className="border rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-[#BE8D4A]"
                 disabled={loading}
               >
                 <option value="">اختر المدرسة</option>

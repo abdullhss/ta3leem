@@ -37,6 +37,9 @@ import RenewSchoolRequest from './pages/RenewSchoolRequest.jsx'
 import RenewRequest from './pages/RenewRequest.jsx'
 import CreateVisitRequest from './pages/CreateVisitRequest.jsx'
 import SingleVisitRequest from './pages/SingleVisitRequest.jsx'
+import CreateOtherRequest from './pages/CreateOtherRequest.jsx'
+import SingleOtherRequest from './pages/SingleOtherRequest.jsx'
+import DeleteOtherRequest from './pages/DeleteOtherRequest.jsx'
 function App() {
   return (
     <Routes>
@@ -85,8 +88,11 @@ function App() {
         <Route path='/renew-requests/:id' element={<RenewRequest/>}/>
         <Route path='/visit-requests/:id' element={<SingleVisitRequest/>}/>
         <Route path='/requests/renew-school' element={<RenewSchoolRequest/>}/>
-        <Route path='/renew-school-requests/:id' element={<RenewSchoolRequest/>}/>\
+        <Route path='/renew-school-requests/:id' element={<RenewSchoolRequest/>}/>
         <Route path='/create-visit-request' element={<CreateVisitRequest/>}/>
+        <Route path='/requests/create-other' element={<CreateOtherRequest/>}/>
+        <Route path='/other-requests/:id' element={<SingleOtherRequest/>}/>
+        <Route path='/requests/delete-other-request' element={<DeleteOtherRequest/>}/>
       </Route>
     </Routes>
   )
