@@ -110,7 +110,20 @@ export const signupSchema = z.object({
       });
     }
   }
-
+  if (data.nationalityId !== "1" && data.residenceExpiry) {
+    const today = new Date();
+    const expiryDate = new Date(data.residenceExpiry);
+  
+    const sixMonthsLater = new Date();
+    sixMonthsLater.setMonth(sixMonthsLater.getMonth() + 6);
+  
+    if (expiryDate < sixMonthsLater) {
+      ctx.addIssue({
+        path: ["residenceExpiry"],
+        message: "يجب أن تكون الإقامة سارية لمدة 6 أشهر على الأقل",
+      });
+    }
+  }
   /** لو غير ليبي */
   if (data.nationalityId !== "1") {
     const requiredFields = [
