@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { ChevronRight } from 'lucide-react';
+import { motion } from 'framer-motion';
 import TablePage from '../components/TablePage';
 import useSchoolRenewRequests from '../hooks/Mofwad/useSchoolRenewRequests';
 import { useSelector } from 'react-redux';
 import { toast } from "react-toastify";
 import { DoTransaction } from '../services/apiServices';
+import { Button } from '../ui/button';
+import { ConfirmModal } from '../global/global-modal/ConfirmModal';
 
 const RENEWAL_TABLE_KEY = "Jf6ubvBmZQ4bzGJbt/ux9edm/YG1+BQ0qmTwv4U3uy8=";
 
@@ -16,9 +20,19 @@ const columns = [
   { uid: 'actions', name: 'الإجراءات' },
 ];
 
+const fadeIn = {
+  initial: { opacity: 0, y: 15 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+};
+
 const RenewalRequests = () => {
   const userData = useSelector((state) => state.auth.userData);
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  const isDeleteMode = location.state?.action === 2 && location.state?.renewalRequest;
+  const deleteRequestData = location.state?.renewalRequest;
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   
   const [tableData, setTableData] = useState([]);
   const [searchText, setSearchText] = useState('');
@@ -116,18 +130,24 @@ const RenewalRequests = () => {
 
   const canEditOrDelete = (data) => data?.InitialApproveStatus === 0 && data?.FinalApproveStatus === 0;
 
-  const handleDeleteRenewal = async (item) => {
-    const data = item._fullData || item;
-    if (!canEditOrDelete(data)) {
-      toast.warning("لا يمكن حذف الطلب في حالته الحالية");
+  const handleDeleteRenewal = async () => {
+    const data = deleteRequestData;
+    if (!data?.id) {
+      toast.error("بيانات الطلب غير صحيحة");
       return;
     }
-    if (!window.confirm("هل أنت متأكد من حذف هذا الطلب؟")) return;
+    if (!canEditOrDelete(data)) {
+      toast.warning("لا يمكن حذف الطلب في حالته الحالية");
+      setShowDeleteModal(false);
+      return;
+    }
     try {
       const response = await DoTransaction(RENEWAL_TABLE_KEY, `${data.id}`, 2);
       if (response?.success === 200) {
         toast.success("تم حذف الطلب بنجاح");
+        setShowDeleteModal(false);
         setRefreshKey((k) => k + 1);
+        navigate(-1);
       } else {
         toast.error(response?.errorMessage || "فشل في حذف الطلب");
       }
@@ -159,7 +179,17 @@ const RenewalRequests = () => {
     {
       label: 'حذف',
       danger: true,
-      onClick: handleDeleteRenewal,
+      onClick: (item) => {
+        const data = item._fullData || item;
+        if (!canEditOrDelete(data)) {
+          toast.warning("لا يمكن حذف الطلب في حالته الحالية");
+          return;
+        }
+        navigate('/requests/renewal', {
+          state: { action: 2, renewalRequest: data },
+          replace: false,
+        });
+      },
     },
   ];
 
@@ -190,6 +220,63 @@ const RenewalRequests = () => {
         <div className="text-center text-red-600 py-8">
           <p>حدث خطأ في تحميل البيانات</p>
           <p className="text-sm text-gray-600 mt-2">{error.message}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Delete mode UI (same as AddManger delete mode)
+  if (isDeleteMode && deleteRequestData) {
+    const displayName = deleteRequestData.School_FullName || 'هذا الطلب';
+    return (
+      <div className="flex flex-col gap-6 w-full">
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <ConfirmModal
+              desc={`هل أنت متأكد من حذف طلب التجديد "${displayName}"؟`}
+              confirmFunc={handleDeleteRenewal}
+              onClose={() => setShowDeleteModal(false)}
+            />
+          </div>
+        </div>
+        )}
+        <div className="flex items-center font-bold gap-2 p-4 md:p-6 bg-white rounded-md">
+          <span className="bg-black rounded-md flex-shrink-0" onClick={() => navigate(-1)}>
+            <ChevronRight className="text-white cursor-pointer" height={20} width={20} />
+          </span>
+          <h1 className="text-lg md:text-xl">حذف طلب تجديد</h1>
+        </div>
+        <motion.div
+          variants={fadeIn}
+          initial="initial"
+          animate="animate"
+          className="flex flex-col gap-6 p-4 md:p-6 bg-white rounded-md"
+        >
+          <div className="text-center py-8">
+            <p className="text-lg text-gray-700 mb-4">
+              هل أنت متأكد من حذف طلب التجديد <strong>"{displayName}"</strong>؟
+            </p>
+            <p className="text-sm text-gray-500">لا يمكن التراجع عن هذا الإجراء</p>
+          </div>
+        </motion.div>
+        <div className="flex flex-col items-center font-bold gap-6 p-4 md:p-6 bg-white rounded-md">
+          <div className="flex gap-4 w-full">
+            <Button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="px-6 py-4 rounded font-semibold w-1/2 border border-gray-500 bg-transparent text-gray-700 hover:bg-gray-100 transition-colors"
+            >
+              إلغاء
+            </Button>
+            <Button
+              type="button"
+              onClick={() => setShowDeleteModal(true)}
+              className="px-6 py-4 rounded font-semibold w-1/2 bg-red-500 text-white hover:bg-red-600 transition-colors"
+            >
+              حذف الطلب
+            </Button>
+          </div>
         </div>
       </div>
     );
