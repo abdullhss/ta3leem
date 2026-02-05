@@ -11,19 +11,36 @@ export default function AccountInfo() {
   const navigate = useNavigate();
   const data = Mofwad?.[0];
 
+  const isLocal = data?.Nationality_Id == 1;
+
   // Check if all required attachments are provided and not 0
   const hasAllAttachments = () => {
-    const requiredAttachments = [
-      data?.WorkOfficeStatementAttach,
-      data?.SecurityCardAttach,
-      data?.PictureAttach,
-      data?.HealthCardAttach,
-      data?.BirthCertificateAttach,
-    ];
+    const requiredAttachments = [];
     
-    // Add WorkforceCardAttach only for non-nationals (nationality != 1)
-    if (data?.Nationality_Id != 1) {
-      requiredAttachments.push(data?.WorkforceCardAttach);
+    if (isLocal) {
+      // Local requirements
+      requiredAttachments.push(
+        data?.WorkOfficeStatementAttach,
+        data?.SecurityCardAttach,
+        data?.PictureAttach,
+        data?.HealthCardAttach,
+        data?.BirthCertificateAttach,
+        data?.NationalNumAttach,
+        data?.SalbyCertificateAttach
+      );
+    } else {
+      // Foreign requirements
+      requiredAttachments.push(
+        data?.WorkOfficeStatementAttach,
+        data?.SecurityCardAttach,
+        data?.PictureAttach,
+        data?.HealthCardAttach,
+        data?.BirthCertificateAttach,
+        data?.WorkforceCardAttach,
+        data?.PassportNumAttach,
+        data?.ResidenseNumAttach,
+        data?.SalbyCertificateAttach
+      );
     }
     
     return requiredAttachments.every(attach => attach && attach !== 0);
@@ -36,7 +53,7 @@ export default function AccountInfo() {
       {/* Header Section */}
       <div className="bg-white rounded-lg p-4 md:p-6 flex flex-col gap-3 md:gap-4">
         <h1 className="font-bold text-[#828282] text-sm md:text-base">معلومات حساب المفوض</h1>
-        <h2 className="text-lg md:text-xl font-bold">{data?.Nationality_Id == 1 ? "مفوض محلي" : "مفوض أجنبي"}</h2>
+        <h2 className="text-lg md:text-xl font-bold">{isLocal ? "مفوض محلي" : "مفوض أجنبي"}</h2>
       </div>
 
       {/* Personal Info Section */}
@@ -58,8 +75,12 @@ export default function AccountInfo() {
             <h3 className="text-base md:text-lg font-bold">{data?.Nationality || "-"}</h3>
           </div>
           <div className="flex flex-col justify-between gap-1 md:gap-2 w-full sm:w-1/2 lg:w-full xl:w-1/2">
-            <p className="text-xs md:text-sm font-bold text-[#828282]">الرقم الوطني</p>
-            <h3 className="text-base md:text-lg font-bold">{data?.NationalNum || "-"}</h3>
+            <p className="text-xs md:text-sm font-bold text-[#828282]">
+              {isLocal ? "الرقم الوطني" : "رقم جواز السفر"}
+            </p>
+            <h3 className="text-base md:text-lg font-bold">
+              {isLocal ? data?.NationalNum || "-" : data?.PassportNum || "-"}
+            </h3>
           </div>
         </div>
       </div>
@@ -89,46 +110,88 @@ export default function AccountInfo() {
           </div>
         </div>
 
-        {/* Certificates Card */}
-        <div className="flex flex-col md:flex-row w-full items-stretch justify-between p-4 md:p-6 rounded-lg bg-white gap-4 md:gap-6 h-fit">
-          <div className="flex flex-col  gap-1 md:gap-2 w-full md:w-1/2">
-            <p className="text-xs md:text-sm font-bold text-[#828282]">شهادة سلبية</p>
-            <div className="w-full flex items-center justify-between md:pl-6">
-              <div className="flex items-center gap-2">
-                <img src={PDF} alt="certificate" className="w-6 h-6 md:w-auto md:h-auto" />
-                <p className="text-xs md:text-sm font-bold text-[#828282] truncate max-w-[100px] md:max-w-none">
-                  {data?.SalbyCertificateAttach ? "مرفق.pdf" : "لا يوجد"}
-                </p>
-              </div>
-              {data?.SalbyCertificateAttach ? (
-                <FileViewer 
-                  id={data.SalbyCertificateAttach}
-                  customButton={<span className="text-xs md:text-sm font-bold text-[#BE8D4A] cursor-pointer">عرض</span>}
-                />
-              ) : null}
-            </div>
-          </div>
-
-          <div className="flex flex-col justify-between gap-1 md:gap-2 w-full md:w-1/2 md:border-r md:border-[#C0C0C0] md:pr-6">
-            <div className="flex flex-col justify-between gap-1 md:gap-2 w-full">
-              <p className="text-xs md:text-sm font-bold text-[#828282]">
-                مرفق الرقم الوطني
-              </p>
+        {/* Certificates Card - Different for local vs foreign */}
+        <div className="flex flex-col w-full items-stretch justify-between gap-4 md:gap-6 bg-white rounded-lg p-4 md:p-6 h-fit">
+          <div className={`grid grid-cols-1 ${isLocal ? 'md:grid-cols-2' : 'md:grid-cols-3'} gap-4 md:gap-6`}>
+            {/* Negative Certificate - Always shown for both */}
+            <div className="flex flex-col gap-1 md:gap-2">
+              <p className="text-xs md:text-sm font-bold text-[#828282]">شهادة سلبية</p>
               <div className="w-full flex items-center justify-between md:pl-6">
                 <div className="flex items-center gap-2">
                   <img src={PDF} alt="certificate" className="w-6 h-6 md:w-auto md:h-auto" />
                   <p className="text-xs md:text-sm font-bold text-[#828282] truncate max-w-[100px] md:max-w-none">
-                    {data?.NationalNumAttach ? "مرفق.pdf" : "لا يوجد"}
+                    {data?.SalbyCertificateAttach ? "مرفق.pdf" : "لا يوجد"}
                   </p>
                 </div>
-                {data?.NationalNumAttach ? (
+                {data?.SalbyCertificateAttach ? (
                   <FileViewer 
-                    id={data.NationalNumAttach}
+                    id={data.SalbyCertificateAttach}
                     customButton={<span className="text-xs md:text-sm font-bold text-[#BE8D4A] cursor-pointer">عرض</span>}
                   />
                 ) : null}
               </div>
             </div>
+
+            {/* Local: National Number Attachment */}
+            {isLocal ? (
+              <div className="flex flex-col gap-1 md:gap-2">
+                <p className="text-xs md:text-sm font-bold text-[#828282]">مرفق الرقم الوطني</p>
+                <div className="w-full flex items-center justify-between md:pl-6">
+                  <div className="flex items-center gap-2">
+                    <img src={PDF} alt="certificate" className="w-6 h-6 md:w-auto md:h-auto" />
+                    <p className="text-xs md:text-sm font-bold text-[#828282] truncate max-w-[100px] md:max-w-none">
+                      {data?.NationalNumAttach ? "مرفق.pdf" : "لا يوجد"}
+                    </p>
+                  </div>
+                  {data?.NationalNumAttach ? (
+                    <FileViewer 
+                      id={data.NationalNumAttach}
+                      customButton={<span className="text-xs md:text-sm font-bold text-[#BE8D4A] cursor-pointer">عرض</span>}
+                    />
+                  ) : null}
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Foreign: Passport Attachment */}
+                <div className="flex flex-col gap-1 md:gap-2">
+                  <p className="text-xs md:text-sm font-bold text-[#828282]">مرفق جواز السفر</p>
+                  <div className="w-full flex items-center justify-between md:pl-6">
+                    <div className="flex items-center gap-2">
+                      <img src={PDF} alt="certificate" className="w-6 h-6 md:w-auto md:h-auto" />
+                      <p className="text-xs md:text-sm font-bold text-[#828282] truncate max-w-[100px] md:max-w-none">
+                        {data?.PassportNumAttach ? "مرفق.pdf" : "لا يوجد"}
+                      </p>
+                    </div>
+                    {data?.PassportNumAttach ? (
+                      <FileViewer 
+                        id={data.PassportNumAttach}
+                        customButton={<span className="text-xs md:text-sm font-bold text-[#BE8D4A] cursor-pointer">عرض</span>}
+                      />
+                    ) : null}
+                  </div>
+                </div>
+
+                {/* Foreign: Residence Attachment */}
+                <div className="flex flex-col gap-1 md:gap-2">
+                  <p className="text-xs md:text-sm font-bold text-[#828282]">مرفق الإقامة</p>
+                  <div className="w-full flex items-center justify-between md:pl-6">
+                    <div className="flex items-center gap-2">
+                      <img src={PDF} alt="certificate" className="w-6 h-6 md:w-auto md:h-auto" />
+                      <p className="text-xs md:text-sm font-bold text-[#828282] truncate max-w-[100px] md:max-w-none">
+                        {data?.ResidenseNumAttach ? "مرفق.pdf" : "لا يوجد"}
+                      </p>
+                    </div>
+                    {data?.ResidenseNumAttach ? (
+                      <FileViewer 
+                        id={data.ResidenseNumAttach}
+                        customButton={<span className="text-xs md:text-sm font-bold text-[#BE8D4A] cursor-pointer">عرض</span>}
+                      />
+                    ) : null}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -152,7 +215,6 @@ export default function AccountInfo() {
       {/* Attachments Section */}
       <div className="rounded-lg">
         <div className="flex flex-col gap-4 md:gap-6">
-
           {/* First Row: Personal Photos & Birth/Health Cards */}
           <div className="flex flex-col lg:flex-row w-full items-stretch justify-between gap-4 md:gap-6">
             {/* Personal Photos Card */}
@@ -199,9 +261,7 @@ export default function AccountInfo() {
 
                 <div className="flex flex-col justify-between gap-1 md:gap-2 w-full md:w-1/2 md:border-r md:border-[#C0C0C0] md:pr-6">
                   <div className="flex flex-col justify-between gap-1 md:gap-2 w-full">
-                    <p className="text-xs md:text-sm font-bold text-[#828282]">
-                      البطاقة الصحية
-                    </p>
+                    <p className="text-xs md:text-sm font-bold text-[#828282]">البطاقة الصحية</p>
                     <div className="w-full flex items-center justify-between md:pl-6">
                       <div className="flex items-center gap-2">
                         <img src={PDF} alt="certificate" className="w-6 h-6 md:w-auto md:h-auto" />
@@ -225,22 +285,20 @@ export default function AccountInfo() {
           {/* Last Row: Security, Work Office, and Workforce Cards */}
           <div className="w-full">
             <div
-              className="
+              className={`
                 grid 
                 grid-cols-1 
                 md:grid-cols-[repeat(auto-fit,minmax(250px,1fr))]
+                ${!isLocal ? 'lg:grid-cols-3' : ''}
                 gap-4 md:gap-6
                 p-4 md:p-6 
                 rounded-lg 
                 bg-white
-              "
+              `}
             >
               {/* Security Card */}
               <div className="flex flex-col justify-between gap-1 md:gap-2 md:border-r md:border-[#C0C0C0] md:pr-6">
-                <p className="text-xs md:text-sm font-bold text-[#828282]">
-                  الخلو من السوابق الجنائية
-                </p>
-
+                <p className="text-xs md:text-sm font-bold text-[#828282]">الخلو من السوابق الجنائية</p>
                 <div className="w-full flex items-center justify-between md:pl-6">
                   <div className="flex items-center gap-2">
                     <img src={PDF} alt="certificate" className="w-6 h-6 md:w-auto md:h-auto" />
@@ -248,14 +306,11 @@ export default function AccountInfo() {
                       {data?.SecurityCardAttach ? "مرفق.pdf" : "لا يوجد"}
                     </p>
                   </div>
-
                   {data?.SecurityCardAttach && (
                     <FileViewer
                       id={data.SecurityCardAttach}
                       customButton={
-                        <span className="text-xs md:text-sm font-bold text-[#BE8D4A] cursor-pointer">
-                          عرض
-                        </span>
+                        <span className="text-xs md:text-sm font-bold text-[#BE8D4A] cursor-pointer">عرض</span>
                       }
                     />
                   )}
@@ -264,10 +319,7 @@ export default function AccountInfo() {
 
               {/* Work Office Statement */}
               <div className="flex flex-col justify-between gap-1 md:gap-2 md:border-r md:border-[#C0C0C0] md:pr-6">
-                <p className="text-xs md:text-sm font-bold text-[#828282]">
-                  إفادة من مكتب العمل
-                </p>
-
+                <p className="text-xs md:text-sm font-bold text-[#828282]">إفادة من مكتب العمل</p>
                 <div className="w-full flex items-center justify-between md:pl-6">
                   <div className="flex items-center gap-2">
                     <img src={PDF} alt="certificate" className="w-6 h-6 md:w-auto md:h-auto" />
@@ -275,27 +327,21 @@ export default function AccountInfo() {
                       {data?.WorkOfficeStatementAttach ? "مرفق.pdf" : "لا يوجد"}
                     </p>
                   </div>
-
                   {data?.WorkOfficeStatementAttach && (
                     <FileViewer
                       id={data.WorkOfficeStatementAttach}
                       customButton={
-                        <span className="text-xs md:text-sm font-bold text-[#BE8D4A] cursor-pointer">
-                          عرض
-                        </span>
+                        <span className="text-xs md:text-sm font-bold text-[#BE8D4A] cursor-pointer">عرض</span>
                       }
                     />
                   )}
                 </div>
               </div>
 
-              {/* Workforce Card (Conditional) */}
-              {data?.Nationality_Id != 1 && (
+              {/* Workforce Card (Conditional - for non-locals) */}
+              {!isLocal && (
                 <div className="flex flex-col justify-between gap-1 md:gap-2">
-                  <p className="text-xs md:text-sm font-bold text-[#828282]">
-                    بطاقة القوى العاملة
-                  </p>
-
+                  <p className="text-xs md:text-sm font-bold text-[#828282]">بطاقة القوى العاملة</p>
                   <div className="w-full flex items-center justify-between md:pl-6">
                     <div className="flex items-center gap-2">
                       <img src={PDF} alt="certificate" className="w-6 h-6 md:w-auto md:h-auto" />
@@ -303,14 +349,11 @@ export default function AccountInfo() {
                         {data?.WorkforceCardAttach ? "مرفق.pdf" : "لا يوجد"}
                       </p>
                     </div>
-
                     {data?.WorkforceCardAttach && (
                       <FileViewer
                         id={data.WorkforceCardAttach}
                         customButton={
-                          <span className="text-xs md:text-sm font-bold text-[#BE8D4A] cursor-pointer">
-                            عرض
-                          </span>
+                          <span className="text-xs md:text-sm font-bold text-[#BE8D4A] cursor-pointer">عرض</span>
                         }
                       />
                     )}
