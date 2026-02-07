@@ -40,6 +40,9 @@ import SingleVisitRequest from './pages/SingleVisitRequest.jsx'
 import CreateOtherRequest from './pages/CreateOtherRequest.jsx'
 import SingleOtherRequest from './pages/SingleOtherRequest.jsx'
 import DeleteOtherRequest from './pages/DeleteOtherRequest.jsx'
+import AssignPrincipalRequistes from './pages/AssignprincipalRequistes.jsx'
+import SingleAssignPrincipalRequest from './pages/SingleAssignPrincipalRequest.jsx'
+
 function App() {
   return (
     <Routes>
@@ -58,6 +61,8 @@ function App() {
         <Route path="/requests/add-manger" element={<AddManger />} />
         <Route path="/requests/transfer-school" element={<TransferSchoolRequest />} />
         <Route path="/requests/assign-principal" element={<AssignPrincipalRequest />} />
+        <Route path="/requests/assign-principal-requests" element={<AssignPrincipalRequistes />} />
+        <Route path="/assign-principal-requests/:id" element={<SingleAssignPrincipalRequest />} />
         <Route path="/requests/other" element={<OtherRequests />} />
         <Route path="/requests/renewal" element={<RenewalRequests />} />
         <Route path="/requests/visit" element={<VisitRequest />} />

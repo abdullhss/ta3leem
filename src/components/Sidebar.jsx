@@ -71,7 +71,7 @@ export default function Sidebar() {
       sublinks: [
         { title: 'تقديم طلب إنشاء مدرسة', path: '/requests/create-school' },
         { title: 'تقديم طلب نقل مدرسة', path: '/requests/transfer-school' },
-        { title: 'طلب تكليف مدير مدرسة جديد', path: '/requests/assign-principal' },
+        { title: 'طلبات تكليف مدير مدرسة', path: '/requests/assign-principal-requests' },
         { title: 'الطلبات الاخرى', path: '/requests/other' },
         { title: 'طلبات التجديد', path: '/requests/renewal' },
         { title: 'طلبات زيارة', path: '/requests/visit' },

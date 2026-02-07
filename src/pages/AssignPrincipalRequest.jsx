@@ -1,11 +1,13 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { motion } from 'framer-motion'
 import { useSelector } from 'react-redux'
 import useSchoolNewManagers from '../hooks/Mofwad/useSchoolNewManagers'
 import { DoTransaction } from '../services/apiServices'
+import useSchools from '@/hooks/schools/useSchools' 
+import useMangers from '@/hooks/manger/useMangers'
 
 const fadeIn = {
   initial: { opacity: 0, y: 15 },
@@ -21,57 +23,69 @@ export default function AssignPrincipalRequest() {
     formState: { errors, isValid }
   } = useForm({
     defaultValues: {
-      schoolManagerId: ''
+      schoolManagerId: '',
+      schoolId: '',
+      reason: ''
     }
   })
-  
+
   const navigate = useNavigate()
+  const location = useLocation()
+  const { assignPrincipalRequest, action = 0 } = location.state || {}
+  const isEditMode = action === 1
+
   const [isSubmitting, setIsSubmitting] = useState(false)
-  
+
   const userData = useSelector((state) => state.auth.userData)
   const educationYearData = useSelector((state) => state.auth.educationYearData)
-  
-  // Fetch school new managers
-  const { SchoolNewManagers, loading, error } = useSchoolNewManagers(
-    userData?.Id || 0,  // Mofwad_Id
-    "",  // searchText
-    1,   // startNumber
-    10000, // rowsPerPage
-    0    // ApproveStatus
-  )
-  
-  // Watch the selected school manager to get related data
+
+  const { Managers: SchoolNewManagers, loading, error: mangersError } = useMangers(userData?.Id, 1, '', 1, 10000)
+  const { schools, loading: schoolsLoading } = useSchools(-1, '', 1, 10000, 'All')
+
+  const selectedSchoolId = watch('schoolId')
   const selectedManagerId = watch('schoolManagerId')
+  const reason = watch('reason')
+
   const selectedManager = SchoolNewManagers?.find(
-    manager => manager.id.toString() === selectedManagerId
+    (manager) => manager.id.toString() === selectedManagerId
   )
-  
-  // Handle form submission
+
+  useEffect(() => {
+    if (isEditMode && assignPrincipalRequest) {
+      setValue('schoolId', assignPrincipalRequest.School_Id?.toString() ?? '')
+      setValue('schoolManagerId', assignPrincipalRequest.newSchoolManager_Id?.toString() ?? '')
+      setValue('reason', assignPrincipalRequest.Reason || '')
+    }
+  }, [isEditMode, assignPrincipalRequest, setValue])
+
   const onSubmit = async (data) => {
     if (!selectedManager) {
       toast.error('يرجى اختيار مدير مدرسة')
       return
     }
-    
+
+    if (!data.reason || data.reason.trim() === '') {
+      toast.error('يرجى كتابة سبب التكليف')
+      return
+    }
+
     setIsSubmitting(true)
-    
+
     try {
-      // Prepare the columns values string based on your API requirements
-      // Format: Id#Mofwad_Id#YearDesc#RequestDate#ApproveStatus#Reason#EducationYear_Id#School_Id#oldSchoolManager_Id#newSchoolManager_Id#CompanyName
-      const columnsValues = `0#${userData.Id}#${educationYearData.YearDesc}#${new Date().toISOString()}#0#طلب تكليف جديد#${educationYearData.Id}#${selectedManager.School_Id}#${selectedManager.oldSchoolManager_Id}#${selectedManager.newSchoolManager_Id}#${userData.CompanyName}`
-      
+      const requestId = isEditMode && assignPrincipalRequest?.id ? assignPrincipalRequest.id : 0
+      const columnsValues = `${requestId}#${selectedSchoolId}#${selectedManagerId}#${data.reason}#${'default'}#${userData.Id}#${educationYearData.Id}#0#0#default#0`
+
       const response = await DoTransaction(
-        "your_stored_procedure_hash_here", // Replace with actual stored procedure hash
+        'qYqLP6vzFFsEjpCmMpa4eLw4RlAPm7M1iuVVgEnI3zs=',
         columnsValues,
-        0, // Action (0 for create)
-        "Id#Mofwad_Id#YearDesc#RequestDate#ApproveStatus#Reason#EducationYear_Id#School_Id#oldSchoolManager_Id#newSchoolManager_Id#CompanyName" // Columns order
+        isEditMode ? 1 : 0,
+        'Id#School_Id#SchoolManager_Id#Reason#RequestDate#RequestBy#EducationYear_Id#ApproveStatus#ApproveBy#ApproveDate#ApproveRemarks'
       )
-      
-      if(response.success == 200){
-        toast.success('تم إرسال طلب التكليف بنجاح')
-        navigate("/requests/assignments") // Adjust navigation route as needed
-      }
-      else{
+
+      if (response.success == 200) {
+        toast.success(isEditMode ? 'تم تحديث طلب التكليف بنجاح' : 'تم إرسال طلب التكليف بنجاح')
+        navigate(isEditMode ? '/requests/assign-principal-requests' : '/requests/assignments')
+      } else {
         toast.error(response.errorMessage || 'حدث خطأ أثناء إرسال الطلب')
       }
     } catch (error) {
@@ -93,7 +107,7 @@ export default function AssignPrincipalRequest() {
       >
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
           <h1 className="text-lg font-bold">
-            طلب تكليف مدير مدرسة جديد
+            {isEditMode ? 'تعديل طلب تكليف مدير مدرسة' : 'طلب تكليف مدير مدرسة جديد'}
           </h1>
           
           {/* View Only Fields Grid */}
@@ -113,22 +127,6 @@ export default function AssignPrincipalRequest() {
                 {userData?.CompanyName || 'غير محدد'}
               </div>
             </div>
-            
-            {/* مدير المدرسة (will be filled from selection) */}
-            <div className="flex flex-col gap-2">
-              <label className="font-medium">مدير المدرسة</label>
-              <div className="border rounded-md p-3 bg-gray-50 text-gray-700 min-h-[44px]">
-                {selectedManager?.oldSchoolManager_FullName || 'يرجى الاختيار من القائمة أدناه'}
-              </div>
-            </div>
-            
-            {/* المدرسة (will be filled from selection) */}
-            <div className="flex flex-col gap-2">
-              <label className="font-medium">المدرسة</label>
-              <div className="border rounded-md p-3 bg-gray-50 text-gray-700 min-h-[44px]">
-                {selectedManager?.School_FullName || 'يرجى الاختيار من القائمة أدناه'}
-              </div>
-            </div>
           </div>
           
           {/* Horizontal Line */}
@@ -139,68 +137,101 @@ export default function AssignPrincipalRequest() {
             <h2 className="text-lg font-semibold mb-4">
               برجاء اختيار مدير مدرسة غير مكلف
             </h2>
+
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+              {/* School Selection */}
+              <div className="flex flex-col gap-2">
+                <label className="font-medium">اختر المدرسة</label>
+                <select
+                  {...register('schoolId')}
+                  className="border rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-[#BE8D4A]"
+                  disabled={schoolsLoading}
+                >
+                  <option value="">جميع المدارس</option>
+                  {schools?.map((school) => (
+                    <option key={school.id} value={school.id}>
+                      {school.School_FullName}
+                    </option>
+                  ))}
+                </select>
+                
+                {schoolsLoading && (
+                  <p className="text-gray-500 text-sm mt-1">جاري تحميل قائمة المدارس...</p>
+                )}
+                
+                {!schoolsLoading && schools?.length === 0 && (
+                  <p className="text-gray-500 text-sm mt-1">لا توجد مدارس متاحة</p>
+                )}
+              </div>
+
             
-            <div className="flex flex-col gap-2">
-              <label className="font-medium">مدير مدرسة غير مكلف</label>
-              <select
-                {...register('schoolManagerId', { 
-                  required: 'هذا الحقل مطلوب',
-                  validate: value => value !== '' || 'يرجى اختيار مدير مدرسة'
-                })}
-                className="border rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-[#BE8D4A]"
-                disabled={loading}
-              >
-                <option value="">اختر مدير مدرسة</option>
-                {SchoolNewManagers?.map((manager) => (
-                  <option key={manager.id} value={manager.id}>
-                    {manager.oldSchoolManager_FullName} - {manager.School_FullName}
-                  </option>
-                ))}
-              </select>
-              
-              {errors.schoolManagerId && (
-                <p className="text-red-500 text-sm mt-1">{errors.schoolManagerId.message}</p>
-              )}
-              
-              {loading && (
-                <p className="text-gray-500 text-sm mt-1">جاري تحميل البيانات...</p>
-              )}
-              
-              {error && (
-                <p className="text-red-500 text-sm mt-1">حدث خطأ في تحميل البيانات</p>
-              )}
-              
-              {!loading && SchoolNewManagers?.length === 0 && (
-                <p className="text-gray-500 text-sm mt-1">لا توجد بيانات متاحة</p>
-              )}
+              {/* Manager Selection */}
+              <div className="flex flex-col gap-2">
+                <label className="font-medium">مدير مدرسة</label>
+                <select
+                  {...register('schoolManagerId', { 
+                    required: 'هذا الحقل مطلوب',
+                    validate: value => value !== '' || 'يرجى اختيار مدير مدرسة'
+                  })}
+                  className="border rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-[#BE8D4A]"
+                  disabled={loading}
+                >
+                  <option value="">اختر مدير مدرسة</option>
+                  {SchoolNewManagers?.map((manager) => (
+                    <option key={manager.id} value={manager.id}>
+                      {manager.FullName}
+                    </option>
+                  ))}
+                </select>
+                
+                {errors.schoolManagerId && (
+                  <p className="text-red-500 text-sm mt-1">{errors.schoolManagerId.message}</p>
+                )}
+                
+                {loading && (
+                  <p className="text-gray-500 text-sm mt-1">جاري تحميل البيانات...</p>
+                )}
+                
+                {mangersError && (
+                  <p className="text-red-500 text-sm mt-1">حدث خطأ في تحميل البيانات</p>
+                )}
+                
+                {!loading && SchoolNewManagers.length === 0 && (
+                  <p className="text-gray-500 text-sm mt-1">
+                    {selectedSchoolId 
+                      ? 'لا توجد مديرين غير مكلفين في هذه المدرسة' 
+                      : 'لا توجد بيانات متاحة'}
+                  </p>
+                )}
+              </div>
             </div>
             
-            {/* Display selected manager details */}
-            {selectedManager && (
-              <div className="mt-4 p-4 bg-blue-50 rounded-md border border-blue-200">
-                <h3 className="font-medium text-blue-800 mb-2">تفاصيل الاختيار:</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <span className="text-sm text-gray-600">اسم المدير:</span>
-                    <p className="font-medium">{selectedManager.oldSchoolManager_FullName}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600">المدرسة:</span>
-                    <p className="font-medium">{selectedManager.School_FullName}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600">سنة التعليم:</span>
-                    <p className="font-medium">{selectedManager.YearDesc}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600">تاريخ الطلب:</span>
-                    <p className="font-medium">
-                      {new Date(selectedManager.RequestDate).toLocaleDateString('ar-EG')}
-                    </p>
-                  </div>
-                </div>
+            {/* Reason Text Area */}
+            <div className="flex flex-col gap-2 mt-6">
+              <label className="font-medium">سبب التكليف</label>
+              <textarea
+                {...register('reason', { 
+                  required: 'هذا الحقل مطلوب',
+                  minLength: {
+                    value: 10,
+                    message: 'يجب أن يكون السبب على الأقل 10 أحرف'
+                  },
+                  maxLength: {
+                    value: 500,
+                    message: 'يجب ألا يتجاوز السبب 500 حرف'
+                  }
+                })}
+                className="border rounded-md p-3 w-full focus:outline-none focus:ring-2 focus:ring-[#BE8D4A] min-h-[120px] resize-y"
+                placeholder="اكتب سبب التكليف هنا..."
+                rows={4}
+              />
+              {errors.reason && (
+                <p className="text-red-500 text-sm mt-1">{errors.reason.message}</p>
+              )}
+              <div className="text-gray-500 text-sm">
+                عدد الأحرف: {reason?.length || 0}/500
               </div>
-            )}
+            </div>
           </div>
           
           {/* Buttons */}

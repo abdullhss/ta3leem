@@ -12,8 +12,8 @@ const useSingleSchoolNewManager = (Mofwad_id , NewManagerRequest_id) => {
       try {
         setLoading(true);
         const response = await executeProcedure("sA7BMZ65gsUS1jyZzL1at9jFiPcE8Vd3EZckh/l/Cr3Zwrac3YsMq7bb5Wf98xFJ" , `${Mofwad_id}#${NewManagerRequest_id}#$????`);
-        setSingleSchoolNewManager(response.decrypted.SchoolData?JSON.parse(response.decrypted.SchoolData):[]);
         console.log(response);
+        setSingleSchoolNewManager(response.decrypted.NewManagerData?JSON.parse(response.decrypted.NewManagerData):[]);
       } catch (err) {
         setError(err);
       } finally {
