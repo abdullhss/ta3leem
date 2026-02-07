@@ -8,15 +8,14 @@ const useSchools = (status_id = -1 ,searchText="" , startNumber = 1 ,count = 10,
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const userData  = useSelector((state) => state.auth.userData);
-  
   useEffect(() => {
     const getSchools = async () => {
       try {
         setLoading(true);
         const schoolTypeValue = schoolType === "New" 
-          ? "drlky5mjKYu9NDKsbDQlPZNgYBj1GWa6oe6H+7KcYl4=" 
-          : "FwyxXIMtzbiLSTYjdhH1XvGLOwvgoTZ27n/LI1XWLLs=";
-        const response = await executeProcedure(schoolTypeValue , `${userData.Id}#${status_id}#$????#${searchText}#${startNumber}#${count}`);
+          ? "drlky5mjKYu9NDKsbDQlPZNgYBj1GWa6oe6H+7KcYl4=" : schoolType === "Exist" ? 
+          "FwyxXIMtzbiLSTYjdhH1XvGLOwvgoTZ27n/LI1XWLLs=" : "sA7BMZ65gsUS1jyZzL1at+IIs5Xd8qAWAL/O6jY/www=";
+          const response = await executeProcedure(schoolTypeValue , `${userData.Id}#${status_id}#$????#${searchText}#${startNumber}#${count}`);
         setTotalCount(Number(response.decrypted.SchoolCount));
         console.log(JSON.parse(response.decrypted.SchoolData));
         

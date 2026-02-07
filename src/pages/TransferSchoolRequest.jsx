@@ -13,7 +13,6 @@ import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import { useNavigate, useLocation } from 'react-router-dom'
 import useSchools from '../hooks/schools/useSchools'
-// import useSchools from '../../hooks/useSchools'
 
 const fadeIn = {
   initial: { opacity: 0, y: 15 },
@@ -41,7 +40,7 @@ const TransferSchoolRequest = () => {
   
   const { Baladias, loading: baladiasLoading } = useBaladia()
   const { BaldiaOffice } = useBaldiaOffice(selectedSchool?.Baldia_Id || selectedSchool?.BaldiaId)
-  const { schools, loading: schoolsLoading } = useSchools(-1, "", 1, 10000, "Exist")
+  const { schools, loading: schoolsLoading } = useSchools(-1, "", 1, 10000, "All")
   const { uploadSingleFile } = useUploadFiles()
   
   const {

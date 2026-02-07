@@ -34,7 +34,7 @@ const RenewSchoolRequest = () => {
     "",  // searchText
     1,   // startNumber
     10000, // rowsPerPage
-    "Exist" // schoolType
+    "All" // schoolType
   )
   
   useEffect(() => {
