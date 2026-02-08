@@ -42,7 +42,9 @@ import SingleOtherRequest from './pages/SingleOtherRequest.jsx'
 import DeleteOtherRequest from './pages/DeleteOtherRequest.jsx'
 import AssignPrincipalRequistes from './pages/AssignprincipalRequistes.jsx'
 import SingleAssignPrincipalRequest from './pages/SingleAssignPrincipalRequest.jsx'
-
+import TransferMangement from './pages/Manger/TransferMangement'
+import SingleTransfer from './pages/Manger/SingleTransfer.jsx'
+import AddTransfer from './pages/Manger/AddTransfer.jsx'
 function App() {
   return (
     <Routes>
@@ -98,6 +100,9 @@ function App() {
         <Route path='/requests/create-other' element={<CreateOtherRequest/>}/>
         <Route path='/other-requests/:id' element={<SingleOtherRequest/>}/>
         <Route path='/requests/delete-other-request' element={<DeleteOtherRequest/>}/>
+        <Route path='/transfer-mangement' element={<TransferMangement/>}/>
+        <Route path='/transfer-mangement/:id' element={<SingleTransfer/>}/>
+        <Route path='/add-transfer' element={<AddTransfer/>}/>
       </Route>
     </Routes>
   )
