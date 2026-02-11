@@ -96,6 +96,15 @@ export default function Sidebar() {
         { title: 'العقوبات', path: '/punishments' },
       ]
     },
+    { 
+      title: ' الجداول', 
+      path: '/schedules',
+      sublinks: [
+        { title: 'الجداول الدراسية', path: '/schedules' },
+      ]
+    },
+    
+
     {title: 'الادارات', path: '/Departments'},
     {title: 'الاقسام', path: '/SchoolDevisions'},
     { title: 'مجموعة الصلاحيات', path: '/permissions' },

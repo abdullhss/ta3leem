@@ -48,6 +48,8 @@ import AddTransfer from './pages/Manger/AddTransfer.jsx'
 import Punishments from './pages/Manger/Punishments'
 import AddPunishments from './pages/Manger/AddPunishments'
 import AddPunishmentType from './pages/Manger/AddPunishmentType'
+import Schedules from './pages/Manger/Schedules'
+import ScheduleDetails from './pages/Manger/ScheduleDetails'
 function App() {
   return (
     <Routes>
@@ -111,6 +113,8 @@ function App() {
         <Route path='/edit-punishment/:id' element={<AddPunishments/>}/>
         <Route path='/add-punishment-type' element={<AddPunishmentType/>}/>
         <Route path='/edit-punishment-type/:id' element={<AddPunishmentType/>}/>
+        <Route path='/schedules' element={<Schedules/>}/>
+        <Route path='/schedule-details/:id/:type' element={<ScheduleDetails/>}/>
       </Route>
     </Routes>
   )
