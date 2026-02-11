@@ -15,10 +15,12 @@ import useEducationSecondaryLevelType from '../../hooks/useEducationSecondaryLev
 import useStudentsByClass from '../../hooks/schools/useStudentsByClass'
 import useUploadFiles from '../../hooks/useUploadFiles'
 import { toast } from 'react-toastify'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { DoTransaction } from '../../services/apiServices'
 import useSchoolClass from '../../hooks/useSchoolClass'
 import useSchoolsByOffice from '../../hooks/schools/useSchoolsByOffice'
+import useSingleStudentTransportation from '../../hooks/schools/useSingleStudentTransportation'
+import { ConfirmModal } from '../../global/global-modal/ConfirmModal'
 
 // Animation variants
 const fadeIn = {
@@ -65,10 +67,29 @@ const addTransferSchema = z.object({
     .max(500, "السبب يجب أن لا يتجاوز 500 حرف")
 })
 
+const TRANSFER_TABLE_KEY = "bODjeovmi/JdOPD2B+6n6j1y3X2IJMdguQEtVdLuTsI="
+
 const AddTransfer = () => {
   const { userData, educationYearData } = useSelector((state) => state.auth)
   const navigate = useNavigate()
+  const location = useLocation()
   const { uploadSingleFile } = useUploadFiles()
+
+  const action = location.state?.action ?? 0 // 0 = add, 1 = edit, 2 = delete
+  const transferRequest = location.state?.transferRequest
+  const isEditMode = action === 1
+  const isDeleteMode = action === 2
+
+  const requestId = transferRequest?.Id ?? transferRequest?.id
+
+  // Single transfer data for edit mode
+  const { SingleStudentTransportation, loading: singleLoading } = useSingleStudentTransportation({
+    School_id: userData?.School_Id ?? -1,
+    request_id: isEditMode && requestId ? requestId : -1
+  })
+  const editDetails = Array.isArray(SingleStudentTransportation) ? SingleStudentTransportation[0] : SingleStudentTransportation
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
 
   // State for uploaded file
   const [behaviorFile, setBehaviorFile] = useState(null)
@@ -234,6 +255,28 @@ const AddTransfer = () => {
     }
   }, [watchBaladiaOfficeId, setValue])
 
+  // Pre-fill form in edit mode when single transfer data is loaded
+  useEffect(() => {
+    if (!isEditMode || !editDetails) return
+    const d = editDetails
+    setValue("educationalStage", String(d.EducationLevel_Id ?? ""))
+    setValue("grade", String(d.EducationClass_Id ?? ""))
+    setValue("semester", String(d.SchoolClass_Id ?? ""))
+    setValue("studentId", String(d.Student_id ?? ""))
+    setValue("baladiaOfficeId", String(d.WantedOffice_Id ?? ""))
+    setValue("targetSchoolId", String(d.WantedSchool_Id ?? ""))
+    setValue("reason", d.Reason ?? "")
+    if (d.EducationSecondaryLevelType_Id != null && d.EducationSecondaryLevelType_Id !== "")
+      setValue("educationSecondaryLevelType", String(d.EducationSecondaryLevelType_Id))
+    if (d.Baladia_Id != null) setValue("baladiaId", String(d.Baladia_Id))
+    else if (d.WantedOffice_BaladiaId != null) setValue("baladiaId", String(d.WantedOffice_BaladiaId))
+    if (d.SerahAndSlokAttach) {
+      setBehaviorFileId(d.SerahAndSlokAttach)
+      setBehaviorFile({ id: d.SerahAndSlokAttach, name: "سيرة و السلوك" })
+      setValue("behaviorFileId", d.SerahAndSlokAttach)
+    }
+  }, [isEditMode, editDetails, setValue])
+
   // Handle school selection
   const handleSchoolChange = (schoolId) => {
     const school = filteredSchools.find(s => s.Id == schoolId)
@@ -272,14 +315,14 @@ const AddTransfer = () => {
     setValue("behaviorFileId", null)
   }
 
-  // Form submission
+  // Form submission (add = action 0, edit = action 1)
   const onSubmit = async (data) => {
     console.log("Form Data:", data)
     
     try {
-      // Prepare payload based on API requirements
+      const id = isEditMode ? (requestId ?? editDetails?.Id ?? editDetails?.id) : 0
       const payload = [
-            0,                               // Id
+            id,                               // Id
             userData.School_Id,              // School_Id
             educationYearData?.Id || 0,       // EducationYear_Id
             data.educationalStage,            // EducationLevel_Id
@@ -290,15 +333,15 @@ const AddTransfer = () => {
             data.targetSchoolId,              // WantedSchool_Id
             data.behaviorFileId || 0,         // SerahAndSlokAttach
             data.reason,                      // Reason
-            "default",                               // CreatedDate
-            userData.Id || userData.id ,                      // CreatedBy
+            "default",                        // CreatedDate
+            userData.Id || userData.id,       // CreatedBy
             0,                                // SchoolApproved
             0,                                // SchoolApproveBy
-            "default",                               // SchoolApproveDate
+            "default",                        // SchoolApproveDate
             "",                               // SchoolApproveRemarks
             0,                                // OfficeApproved
             0,                                // OfficeApproveBy
-            "default",                               // OfficeApproveDate
+            "default",                        // OfficeApproveDate
             "",                               // OfficeApproveRemarks
             data.educationSecondaryLevelType || 0 // EducationSecondaryLevelType_Id
           ].join("#")
@@ -306,22 +349,46 @@ const AddTransfer = () => {
       console.log("API Payload:", payload)
       
       const response = await DoTransaction(
-        "bODjeovmi/JdOPD2B+6n6j1y3X2IJMdguQEtVdLuTsI=",
+        TRANSFER_TABLE_KEY,
         payload,
-        0, // Action 0 = add
+        isEditMode ? 1 : 0, // wanted action: 0 = add, 1 = edit
         "Id#School_Id#EducationYear_Id#EducationLevel_Id#EducationClass_Id#SchoolClass_Id#Student_id#WantedOffice_Id#WantedSchool_Id#SerahAndSlokAttach#Reason#CreatedDate#CreatedBy#SchoolApproved#SchoolApproveBy#SchoolApproveDate#SchoolApproveRemarks#OfficeApproved#OfficeApproveBy#OfficeApproveDate#OfficeApproveRemarks#EducationSecondaryLevelType_Id"
       )
       
       console.log("API Response:", response)
       
       if (response.success != 200) {
-        toast.error(response.errorMessage || "فشل في إضافة النقل")
+        toast.error(response.errorMessage || (isEditMode ? "فشل في تعديل النقل" : "فشل في إضافة النقل"))
       } else {
-        toast.success("تم إضافة النقل بنجاح")
+        toast.success(isEditMode ? "تم تعديل النقل بنجاح" : "تم إضافة النقل بنجاح")
+        if (isEditMode) navigate(-1)
       }
     } catch (error) {
       console.error("Error:", error)
-      toast.error("حدث خطأ أثناء إضافة النقل")
+      toast.error("حدث خطأ أثناء " + (isEditMode ? "تعديل" : "إضافة") + " النقل")
+    }
+  }
+
+  // Delete transfer (wanted action 2) - like delete Students
+  const handleDelete = async () => {
+    const data = transferRequest || editDetails
+    if (!data?.Id && !data?.id) {
+      toast.error("بيانات الطلب غير صحيحة")
+      return
+    }
+    const idToDelete = data.Id ?? data.id
+    try {
+      const response = await DoTransaction(TRANSFER_TABLE_KEY, `${idToDelete}`, 2)
+      if (response?.success === 200) {
+        toast.success("تم حذف طلب النقل بنجاح")
+        setShowDeleteModal(false)
+        navigate(-1)
+      } else {
+        toast.error(response?.errorMessage || "فشل في حذف الطلب")
+      }
+    } catch (err) {
+      console.error(err)
+      toast.error("حدث خطأ أثناء الحذف")
     }
   }
 
@@ -329,10 +396,64 @@ const AddTransfer = () => {
     console.log("Form Validation Errors:", errors)
   }
 
+  if (isDeleteMode && transferRequest) {
+    const displayName = transferRequest.Student_FullName || transferRequest.WantedSchool_FullName || "هذا الطلب"
+    return (
+      <div className='flex gap-4 px-4 md:px-0 justify-center overflow-y-auto'>
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <ConfirmModal
+                desc={`هل أنت متأكد من حذف طلب النقل "${displayName}"؟`}
+                confirmFunc={handleDelete}
+                onClose={() => setShowDeleteModal(false)}
+              />
+            </div>
+          </div>
+        )}
+        <div className='w-full relative pb-8 bg-white rounded-lg p-6'>
+          <span className="text-lg font-bold">حذف طلب نقل</span>
+          <div className="flex flex-col gap-6 pt-4 mt-10">
+            <div className="text-center py-8">
+              <p className="text-base text-foreground">
+                هل أنت متأكد من حذف طلب النقل <strong>"{displayName}"</strong>؟
+              </p>
+              <p className="text-sm text-gray-500 mt-2">لا يمكن التراجع عن هذا الإجراء</p>
+            </div>
+            <div className="flex gap-4">
+              <button
+                type="button"
+                className="flex-1 text-red-500 border border-red-500 px-8 py-3 rounded text-lg font-semibold hover:bg-red-500 hover:text-white transition-colors"
+                onClick={() => navigate(-1)}
+              >
+                إلغاء
+              </button>
+              <button
+                type="button"
+                className="flex-1 bg-red-500 text-white px-8 py-3 rounded text-lg font-semibold hover:bg-red-600"
+                onClick={() => setShowDeleteModal(true)}
+              >
+                حذف الطلب
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (isEditMode && singleLoading && !editDetails) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <span className="text-lg">جاري التحميل...</span>
+      </div>
+    )
+  }
+
   return (
     <div className='flex gap-4 px-4 md:px-0 justify-center overflow-y-auto'>
       <div className='w-full relative pb-8 bg-white rounded-lg p-6'>
-        <span className="text-lg font-bold">نقل طالب</span>
+        <span className="text-lg font-bold">{isEditMode ? "تعديل طلب نقل" : "نقل طالب"}</span>
         
         <form onSubmit={handleSubmit(onSubmit, onError)} className="mt-10">
           <div className='mt-10 grid grid-cols-1 md:grid-cols-2 gap-6'>
@@ -568,7 +689,7 @@ const AddTransfer = () => {
             </div>
           </div>
 
-          {/* أزرار الإضافة والإلغاء */}
+          {/* أزرار الإضافة/التعديل والإلغاء */}
           <div className="flex w-full gap-4 mt-10">
             <button
               type="button"
@@ -581,7 +702,7 @@ const AddTransfer = () => {
               type="submit"
               className="bg-[#BE8D4A] w-full text-white px-8 py-3 rounded text-lg font-semibold hover:bg-[#a67c42]"
             >
-              إضافة نقل
+              {isEditMode ? "حفظ التعديلات" : "إضافة نقل"}
             </button>
           </div>
         </form>

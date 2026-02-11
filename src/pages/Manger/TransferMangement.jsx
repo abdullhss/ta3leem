@@ -154,37 +154,49 @@ const TransferManagement = () => {
     setRowsPerPage(rowsPerPageValue);
   };
 
-  // Edit = action 1, Delete = action 2
+  // Edit = action 1, Delete = action 2 (navigate to AddTransfer like Students)
   const handleEdit = (item) => {
     const data = item._fullData || item;
-    console.log('Edit (action 1):', data);
-    // TODO: navigate to edit page or open edit modal
+    navigate('/add-transfer', {
+      state: { action: 1, transferRequest: data }
+    });
   };
 
   const handleDelete = (item) => {
     const data = item._fullData || item;
-    console.log('Delete (action 2):', data);
-    // TODO: call delete API
+    navigate('/add-transfer', {
+      state: { action: 2, transferRequest: data }
+    });
   };
 
   // Actions configuration
-  const getActionsConfig = (isReception = false) => [
-    {
-      label: 'عرض التفاصيل',
-      onClick: (item) => {
-        const data = item._fullData || item;
-        navigate(`/transfer-mangement/${data.Id}`, { state: { source: isReception ? 'reception' : 'transportation' } });
-      },
-    },
-    {
-      label: 'تعديل',
-      onClick: (item) => handleEdit(item),
-    },
-    {
-      label: 'حذف',
-      onClick: (item) => handleDelete(item),
-    },
-  ];
+  const getActionsConfig = (isReception = false) => {
+    const actions = [
+      {
+        label: 'عرض التفاصيل',
+        onClick: (item) => {
+          const data = item._fullData || item;
+          navigate(`/transfer-mangement/${data.Id}`, { state: { source: isReception ? 'reception' : 'transportation' } });
+        }
+      }
+    ]
+    if(!isReception){
+      actions.push(
+        {
+          label: 'تعديل',
+          onClick: (item) => handleEdit(item),
+        }
+      );
+      actions.push(
+        {
+          label: 'حذف',
+          danger: true,
+          onClick: (item) => handleDelete(item),
+        }
+      );
+    }
+    return actions;
+  };
 
   // Get current tab data
   const getCurrentTabData = () => {
