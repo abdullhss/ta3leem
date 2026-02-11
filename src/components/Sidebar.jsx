@@ -93,6 +93,7 @@ export default function Sidebar() {
         { title: 'الطلاب', path: '/education-levels/students' },
         { title: 'الموظفين', path: '/Employees' },
         { title: 'إدارة النقل', path: '/transfer-mangement' },
+        { title: 'العقوبات', path: '/punishments' },
       ]
     },
     {title: 'الادارات', path: '/Departments'},

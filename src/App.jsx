@@ -45,6 +45,9 @@ import SingleAssignPrincipalRequest from './pages/SingleAssignPrincipalRequest.j
 import TransferMangement from './pages/Manger/TransferMangement'
 import SingleTransfer from './pages/Manger/SingleTransfer.jsx'
 import AddTransfer from './pages/Manger/AddTransfer.jsx'
+import Punishments from './pages/Manger/Punishments'
+import AddPunishments from './pages/Manger/AddPunishments'
+import AddPunishmentType from './pages/Manger/AddPunishmentType'
 function App() {
   return (
     <Routes>
@@ -103,6 +106,11 @@ function App() {
         <Route path='/transfer-mangement' element={<TransferMangement/>}/>
         <Route path='/transfer-mangement/:id' element={<SingleTransfer/>}/>
         <Route path='/add-transfer' element={<AddTransfer/>}/>
+        <Route path='/punishments' element={<Punishments/>}/>
+        <Route path='/add-punishment' element={<AddPunishments/>}/>
+        <Route path='/edit-punishment/:id' element={<AddPunishments/>}/>
+        <Route path='/add-punishment-type' element={<AddPunishmentType/>}/>
+        <Route path='/edit-punishment-type/:id' element={<AddPunishmentType/>}/>
       </Route>
     </Routes>
   )
