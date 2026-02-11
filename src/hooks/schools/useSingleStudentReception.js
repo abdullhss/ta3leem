@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import { executeProcedure } from "../../services/apiServices";
 
-const useGenderTypeForSchool = ({school_id}) => {
-  const [GenderTypes, setGenderTypes] = useState([]);
+const useSingleStudentReception = ({School_id, request_id}) => {
+  const [SingleStudentReception, setSingleStudentReception] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const getGenderTypeForSchool = async () => {
+    const getSingleStudentReception = async () => {
       try {
         setLoading(true);
-        const response = await executeProcedure("2UHIuyh/KFDIp4QEXxpHe4PnYtv8Fsa6WiwchQ3o1Kk=" , `${school_id}`);
-        setGenderTypes(response.decrypted.SchoolGenderTypeData?JSON.parse(response.decrypted.SchoolGenderTypeData):[]);
+        const response = await executeProcedure("++LcVz+2MZtpwlF2JKZGD9A3eC0sEPRWCThYejYHYdnJIvMOyG0kUtwGkLp6FRjI" , `${School_id}#${request_id}#$????`);
+        setSingleStudentReception(response.decrypted.StudentTransData?JSON.parse(response.decrypted.StudentTransData):[]);
       } catch (err) {
         setError(err);
       } finally {
@@ -19,10 +19,10 @@ const useGenderTypeForSchool = ({school_id}) => {
       }
     };
 
-    getGenderTypeForSchool();
-  }, [school_id]);
+    getSingleStudentReception();
+  }, [School_id, request_id]);
 
-  return { GenderTypes, loading, error };
+  return { SingleStudentReception, loading, error };
 };
 
-export default useGenderTypeForSchool;
+export default useSingleStudentReception;

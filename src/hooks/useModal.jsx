@@ -52,7 +52,7 @@ const useGlobalModal = () => {
         <DialogContent>
           {(title || modalTitle) && (
             <DialogHeader>
-              <DialogTitle>{title || modalTitle}</DialogTitle>
+              <DialogTitle className="text-right">{title || modalTitle}</DialogTitle>
             </DialogHeader>
           )}
           {renderContent()}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import TablePage from '../../components/TablePage';
 import useStudentReception from '@/hooks/schools/useStudentReception';
@@ -30,6 +31,7 @@ const receptionColumns = [
 ];
 
 const TransferManagement = () => {
+  const navigate = useNavigate();
   const { userData, educationYearData } = useSelector((state) => state.auth);
   const [activeTab, setActiveTab] = useState(null); // Start with no tab selected
   const [tableData, setTableData] = useState([]);
@@ -152,77 +154,36 @@ const TransferManagement = () => {
     setRowsPerPage(rowsPerPageValue);
   };
 
+  // Edit = action 1, Delete = action 2
+  const handleEdit = (item) => {
+    const data = item._fullData || item;
+    console.log('Edit (action 1):', data);
+    // TODO: navigate to edit page or open edit modal
+  };
+
+  const handleDelete = (item) => {
+    const data = item._fullData || item;
+    console.log('Delete (action 2):', data);
+    // TODO: call delete API
+  };
+
   // Actions configuration
   const getActionsConfig = (isReception = false) => [
     {
       label: 'عرض التفاصيل',
       onClick: (item) => {
         const data = item._fullData || item;
-        // Navigate to details page or show modal
-        console.log('View details:', data);
-        // navigate(`/transfer-requests/${data.Id}`);
+        navigate(`/transfer-mangement/${data.Id}`, { state: { source: isReception ? 'reception' : 'transportation' } });
       },
     },
     {
-      label: 'تغيير الحالة',
-      onClick: (item) => {
-        const data = item._fullData || item;
-        if (isReception && data.SchoolApproved === 0) {
-          // Navigate to change status page or show modal
-          console.log('Change status:', data);
-          // navigate(`/transfer-requests/${data.Id}/change-status`);
-        }
-      },
-      condition: (item) => {
-        if (isReception) {
-          return item._fullData?.SchoolApproved === 0;
-        }
-        return false;
-      }
-    }
-  ];
-
-  // Filter configuration (common for both tabs)
-  const filterConfig = [
-    {
-      key: 'educationLevel',
-      label: 'المرحلة الدراسية',
-      type: 'select',
-      options: [
-        { value: -1, label: 'الكل' },
-        { value: 1, label: 'الابتدائية' },
-        { value: 2, label: 'المتوسطة' },
-        { value: 3, label: 'الثانوية' },
-      ],
-      placeholder: 'اختر المرحلة',
+      label: 'تعديل',
+      onClick: (item) => handleEdit(item),
     },
     {
-      key: 'educationClass',
-      label: 'الصف الدراسي',
-      type: 'select',
-      options: [
-        { value: -1, label: 'الكل' },
-        { value: 1, label: 'الصف الأول' },
-        { value: 2, label: 'الصف الثاني' },
-        { value: 3, label: 'الصف الثالث' },
-        { value: 4, label: 'الصف الرابع' },
-        { value: 5, label: 'الصف الخامس' },
-        { value: 6, label: 'الصف السادس' },
-      ],
-      placeholder: 'اختر الصف',
+      label: 'حذف',
+      onClick: (item) => handleDelete(item),
     },
-    {
-      key: 'status',
-      label: 'الحالة',
-      type: 'select',
-      options: [
-        { value: -1, label: 'الكل' },
-        { value: 0, label: 'قيد المراجعة' },
-        { value: 1, label: 'مقبول' },
-        { value: 2, label: 'مرفوض' },
-      ],
-      placeholder: 'اختر الحالة',
-    }
   ];
 
   // Get current tab data
@@ -236,7 +197,7 @@ const TransferManagement = () => {
         actionsConfig: getActionsConfig(false),
         title: 'طلبات نقل الطلبة',
         addButtonTitle: 'إضافة طلب نقل',
-        addButtonPath: "/requests/create-transfer",
+        addButtonPath: "/add-transfer",
         addButtonState: { transferType: 'transportation' }
       };
     } else if (activeTab === 'reception') {
@@ -247,9 +208,6 @@ const TransferManagement = () => {
         columns: receptionColumns,
         actionsConfig: getActionsConfig(true),
         title: 'طلبات استقبال النقل',
-        addButtonTitle: 'إضافة طلب استقبال',
-        addButtonPath: "/requests/create-transfer",
-        addButtonState: { transferType: 'reception' }
       };
     }
     return null;
@@ -312,15 +270,15 @@ const TransferManagement = () => {
           >
             <div className='bg-white rounded-lg p-4'>
               <div className="mb-4 flex justify-between items-center">
+                <h2 className="text-lg font-bold">
+                  {activeTab === 'transportation' ? 'نقل طلبة المدرسة' : 'استقبال طلبات النقل للمدرسة'}
+                </h2>
                 <button
                   onClick={() => setActiveTab(null)}
                   className="text-[#C18C46] hover:text-[#A97838] font-medium text-sm flex items-center gap-2"
                 >
-                  <span>← العودة</span>
+                  <span>العودة</span>
                 </button>
-                <h2 className="text-lg font-bold">
-                  {activeTab === 'transportation' ? 'نقل طلبة المدرسة' : 'استقبال طلبات النقل للمدرسة'}
-                </h2>
               </div>
 
               <TablePage
@@ -329,13 +287,12 @@ const TransferManagement = () => {
                 total={currentTabData.total}
                 fetchApi={fetchApi}
                 isLoading={currentTabData.loading}
-                filters={filterConfig}
                 isFilteredByDate={true}
                 rowsPerPageDefault={5}
                 clickable={true}
                 tableTitle={currentTabData.title}
                 isHeaderSticky={true}
-                AddButtonProps={{
+                AddButtonProps={currentTabData.title === 'طلبات نقل الطلبة' && {
                   title: currentTabData.addButtonTitle,
                   path: currentTabData.addButtonPath,
                   state: currentTabData.addButtonState
@@ -344,9 +301,7 @@ const TransferManagement = () => {
                 searchPlaceholder="ابحث باسم الطالب..."
                 onDoubleClick={(item) => {
                   const data = item._fullData || item;
-                  // Navigate to details
-                  console.log('Double click:', data);
-                  // navigate(`/transfer-requests/${data.id}`);
+                  navigate(`/transfer-mangement/${data.Id}`, { state: { source: activeTab === 'reception' ? 'reception' : 'transportation' } });
                 }}
               />
             </div>

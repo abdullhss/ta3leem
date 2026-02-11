@@ -13,10 +13,8 @@ const useStudentReception = ({School_id, Student_id, EducationYear_Id, Education
         setLoading(true);
         const response = await executeProcedure("++LcVz+2MZtpwlF2JKZGD+oq8nUmzjHrQHGbf141+KY=" , `${School_id}#${Student_id}#${EducationYear_Id}#${EducationLevel_Id}#${EducationClass_Id}#$????#${StartNum}#${Count}`);
         console.log(response);
-        //StudentReceptionCount
-        //StudentReceptionData
-        setStudentReception(response.decrypted.StudentReceptionData?JSON.parse(response.decrypted.StudentReceptionData):[]);
-        setTotalCount(Number(response.decrypted.StudentReceptionCount));
+        setStudentReception(response.decrypted.StudentTransData?JSON.parse(response.decrypted.StudentTransData):[]);
+        setTotalCount(Number(response.decrypted.StudentTransCount));
       } catch (err) {
         setError(err);
       } finally {

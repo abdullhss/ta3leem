@@ -92,6 +92,7 @@ export default function Sidebar() {
         { title: 'اولياء الأمور', path: '/education-levels/parents' },
         { title: 'الطلاب', path: '/education-levels/students' },
         { title: 'الموظفين', path: '/Employees' },
+        { title: 'إدارة النقل', path: '/transfer-mangement' },
       ]
     },
     {title: 'الادارات', path: '/Departments'},
