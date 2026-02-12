@@ -101,6 +101,7 @@ export default function Sidebar() {
       path: '/schedules',
       sublinks: [
         { title: 'الجداول الدراسية', path: '/schedules' },
+        { title: 'تعديل جداول الامتحانات', path: '/examine-schedule' },
       ]
     },
     

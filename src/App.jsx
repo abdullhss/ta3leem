@@ -50,6 +50,8 @@ import AddPunishments from './pages/Manger/AddPunishments'
 import AddPunishmentType from './pages/Manger/AddPunishmentType'
 import Schedules from './pages/Manger/Schedules'
 import ScheduleDetails from './pages/Manger/ScheduleDetails'
+import ExamineSchedule from './pages/Manger/ExamineSchedule'
+import EditExamineSchedule from './pages/Manger/EditExamineSchedule.jsx'
 function App() {
   return (
     <Routes>
@@ -115,6 +117,9 @@ function App() {
         <Route path='/edit-punishment-type/:id' element={<AddPunishmentType/>}/>
         <Route path='/schedules' element={<Schedules/>}/>
         <Route path='/schedule-details/:id/:type' element={<ScheduleDetails/>}/>
+        <Route path='/examine-schedule' element={<ExamineSchedule/>}/>
+        <Route path='/examine-schedule/add' element={<EditExamineSchedule/>}/>
+        <Route path='/examine-schedule/edit' element={<EditExamineSchedule/>}/>
       </Route>
     </Routes>
   )
